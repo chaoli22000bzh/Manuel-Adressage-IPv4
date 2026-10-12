@@ -1,4 +1,9 @@
 'use strict';
+// V0.3.38 - positionner le titre du chapitre 1 sous la barre de navigation à son ouverture.
+const ficheChapter=document.getElementById('fiche');
+if(ficheChapter)ficheChapter.addEventListener('toggle',()=>{
+ if(ficheChapter.open)ficheChapter.scrollIntoView({behavior:'smooth',block:'start'});
+});
 const ip=[192,168,10,75],prefix=26, bits=ip.map(x=>x.toString(2).padStart(8,'0')).join('');
 const mask='1'.repeat(prefix)+'0'.repeat(32-prefix);
 const network=bits.slice(0,prefix)+'0'.repeat(32-prefix);
