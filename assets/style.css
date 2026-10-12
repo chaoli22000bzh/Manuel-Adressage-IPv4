@@ -38,3 +38,6 @@
 
 /* V0.3.7 - adresse IPv4 d'origine toujours verte, CIDR neutre tant que masqué */
 .bit-table td.original-ip,.bit-table td.original-ip.one{background:#18764b!important;color:#fff!important;border-color:#259966!important}.bit-table tr.host-row td.original-ip{border-right-color:#259966!important}.bit-table-lesson td.neutral,.bit-table-lesson td.neutral.one{background:var(--accentlight);color:var(--ink)}.bit-table-lesson tbody tr:nth-child(2) td.neutral{border-right:1px solid var(--line)!important}
+
+/* V0.3.9 : repère discret de la ligne travaillée, sans surligner la cellule */
+.bit-table td.active-row-label{box-shadow:inset 4px 0 0 #ffae00!important;padding-left:12px!important;font-weight:800!important}
