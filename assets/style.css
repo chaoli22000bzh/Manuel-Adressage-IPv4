@@ -119,3 +119,18 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .difficulty-description{display:flex;flex-direction:column;gap:6px}.difficulty-description strong{font-size:1rem}.difficulty-description small{font-size:.85rem;line-height:1.35}
 .training-coming-soon{margin:22px 0 0;text-align:center;opacity:.8}
 @media(max-width:700px){.training-difficulties{grid-template-columns:1fr}.training-difficulties button{flex-direction:row;text-align:left;justify-content:flex-start;gap:18px}.difficulty-bars{min-width:58px}.training-options{grid-template-columns:1fr}}
+
+/* V0.3.36 - choix partiels à gauche, exercice complet à droite ; progression colorée */
+.training-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(58px,auto));gap:10px}
+.training-options .training-option:nth-child(1){grid-column:1;grid-row:1}
+.training-options .training-option:nth-child(2){grid-column:1;grid-row:2}
+.training-options .training-option:nth-child(3){grid-column:1;grid-row:3}
+.training-options .training-option:nth-child(4){grid-column:2;grid-row:1 / 4;font-size:1.15rem}
+.training-difficulties button{position:relative}
+.training-difficulties .difficulty-bars span{background:#2675ee}
+.training-difficulties .difficulty-bars span:nth-child(2){background:#ed982c}
+.training-difficulties .difficulty-bars span:nth-child(3){background:#e34b4b}
+.training-pepette{position:absolute;top:10px;right:10px;width:43px;height:48px;object-fit:contain;border-radius:8px}
+.training-difficulties button[data-training-difficulty="1"] .difficulty-bars{margin-right:28px}
+@media(max-width:700px){.training-options{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(58px,auto))}.training-difficulties button[data-training-difficulty="1"] .difficulty-bars{margin-right:0}.training-pepette{position:static;width:40px;height:46px;order:2;margin-left:auto}}
+@media(max-width:430px){.training-options{grid-template-columns:1fr;grid-template-rows:auto}.training-options .training-option:nth-child(n){grid-column:1;grid-row:auto}.training-options .training-option:nth-child(4){min-height:70px}}
