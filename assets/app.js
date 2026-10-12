@@ -23,7 +23,31 @@ renderTable('table-ip-only','ip-only');renderTable('table-host','host');for(let 
 // Tableau de conversion décimal/binaire, construit localement sans connexion Internet.
 const binaryReference=document.getElementById('binary-reference-rows');if(binaryReference){binaryReference.innerHTML=Array.from({length:64},(_,i)=>'<tr>'+[0,64,128,192].map(base=>'<td>'+(base+i)+'</td><td>'+(base+i).toString(2).padStart(8,'0')+'</td>').join('')+'</tr>').join('');}
 
-// L'astuce de Pépette n'agit que sur les deux derniers bits des quatre adresses calculées.
-const pepetteToggle=document.getElementById('pepette-toggle');if(pepetteToggle){pepetteToggle.addEventListener('click',()=>{const table=document.querySelector('#table-full table');if(!table)return;const active=!table.classList.contains('pepette-active');table.classList.toggle('pepette-active',active);for(const tr of [...table.tBodies[0].rows].slice(2)){for(const td of [...tr.cells].slice(-2)){if(active&&td.textContent.trim()===''){td.textContent='0';td.classList.add('pepette-zero')}else if(!active&&td.classList.contains('pepette-zero')){td.textContent='';td.classList.remove('pepette-zero')}}}pepetteToggle.textContent=active?'Masquer Astuce':'Afficher Astuce';pepetteToggle.setAttribute('aria-pressed',String(active));void 0})}
+// Les deux coups de patte sont indépendants et peuvent être activés ensemble.
+const pepetteToggle=document.getElementById('pepette-toggle');
+const pepetteToggle1=document.getElementById('pepette-toggle-1');
+const pepetteState={one:false,two:false};
+function updatePepetteTips(){
+ const table=document.querySelector('#table-full table');if(!table)return;
+ table.classList.toggle('pepette-active',pepetteState.two);
+ table.classList.toggle('pepette-one-active',pepetteState.one);
+ for(let r=2;r<6;r++){
+  const cells=[...table.tBodies[0].rows[r].cells];
+  for(let i=prefix;i<32;i++){
+   const td=cells[i+1];if(!td)continue;
+   const showOne=pepetteState.one&&(r===4||r===5);
+   const showTwo=pepetteState.two&&i>=30;
+   const original=rows[r][1][i];
+   td.classList.toggle('pepette-one-bit',showOne);
+   td.classList.toggle('pepette-two-bit',showTwo);
+   if(original==='0'&&(showOne||showTwo)){td.textContent='0';td.classList.add('pepette-zero')}
+   else if(td.classList.contains('pepette-zero')){td.textContent='';td.classList.remove('pepette-zero')}
+  }
+ }
+ if(pepetteToggle1){pepetteToggle1.textContent=pepetteState.one?'Masquer Astuce 1':'Afficher Astuce 1';pepetteToggle1.setAttribute('aria-pressed',String(pepetteState.one))}
+ if(pepetteToggle){pepetteToggle.textContent=pepetteState.two?'Masquer Astuce 2':'Afficher Astuce 2';pepetteToggle.setAttribute('aria-pressed',String(pepetteState.two))}
+}
+if(pepetteToggle1)pepetteToggle1.addEventListener('click',()=>{pepetteState.one=!pepetteState.one;updatePepetteTips()});
+if(pepetteToggle)pepetteToggle.addEventListener('click',()=>{pepetteState.two=!pepetteState.two;updatePepetteTips()});
 
 const binaryHelpToggle=document.getElementById('binary-help-toggle');if(binaryHelpToggle)binaryHelpToggle.addEventListener('click',()=>{const panel=document.getElementById('binary-help-panel');const open=panel.hidden;panel.hidden=!open;binaryHelpToggle.setAttribute('aria-expanded',String(open));binaryHelpToggle.textContent=open?'Refermer le coup de patte':'Voir le coup de patte'});
