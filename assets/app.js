@@ -60,7 +60,7 @@ const goTraining=document.getElementById('go-training');
 const goFlsm=document.getElementById('go-flsm');
 function openNextChapter(targetId){
  const target=document.getElementById(targetId);
- const ipv4=document.getElementById('ipv4');
+ const ipv4=document.getElementById('fiche');
  if(!target)return;
  if(ipv4)ipv4.open=(targetId==='training-fold');
  if(targetId==='flsm'){
