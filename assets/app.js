@@ -60,3 +60,18 @@ document.querySelectorAll('.decimal-reveal').forEach(button=>button.addEventList
 const decimalSummaryButton=document.getElementById('decimal-summary-toggle');if(decimalSummaryButton)decimalSummaryButton.addEventListener('click',()=>{const panel=document.getElementById('decimal-summary');panel.hidden=!panel.hidden;decimalSummaryButton.textContent=panel.hidden?'Afficher le tableau corrigé':'Masquer le tableau corrigé';decimalSummaryButton.setAttribute('aria-expanded',String(!panel.hidden))});
 const goHotes=document.getElementById('go-hotes');if(goHotes)goHotes.addEventListener('click',()=>{document.getElementById('decimal-fold').open=false;const next=document.getElementById('hotes-fold');next.open=true;next.scrollIntoView({behavior:'smooth',block:'start'})});
 const powersButton=document.getElementById('pepette-powers-toggle');if(powersButton)powersButton.addEventListener('click',()=>{const panel=document.getElementById('pepette-powers-panel');panel.hidden=!panel.hidden;powersButton.textContent=panel.hidden?'Voir le coup de patte':'Refermer le coup de patte';powersButton.setAttribute('aria-expanded',String(!panel.hidden))});
+
+// V0.3.22 - tableaux décimaux à 32 colonnes, poids alignés sur les bits.
+for(const card of document.querySelectorAll('.decimal-step')){
+ const table=card.querySelector('.decimal-guide');if(!table)continue;
+ const binary=[...table.querySelectorAll('.binary-octet')].map(td=>td.textContent.trim());
+ const values=[...table.querySelectorAll('.decimal-value')].map(td=>td.dataset.value);
+ const names=['1er octet','2e octet','3e octet','4e octet'];
+ let markup='<thead><tr><th class="decimal-row-name"></th>'+names.map((name,o)=>'<th colspan="8" class="decimal-octet-title octet-'+(o+1)+'">'+name+'</th>').join('')+'</tr><tr><th class="decimal-row-name">Poids décimaux</th>';
+ for(let i=0;i<32;i++)markup+='<th class="decimal-weight octet-'+(Math.floor(i/8)+1)+'">'+(128>>(i%8))+'</th>';
+ markup+='</tr></thead><tbody><tr><th class="decimal-row-name">Binaire</th>';
+ for(let o=0;o<4;o++)for(let b=0;b<8;b++)markup+='<td class="decimal-bit octet-'+(o+1)+(binary[o][b]==='1'?' decimal-one':'')+'">'+binary[o][b]+'</td>';
+ markup+='</tr><tr><th class="decimal-row-name">Décimal</th>';
+ for(let o=0;o<4;o++)markup+='<td colspan="8" class="decimal-value octet-'+(o+1)+'" data-value="'+values[o]+'">?</td>';
+ markup+='</tr></tbody>';table.innerHTML=markup;
+}
