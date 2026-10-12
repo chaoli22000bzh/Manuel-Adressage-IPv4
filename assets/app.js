@@ -103,7 +103,7 @@ trainingDifficulties.forEach(button=>button.addEventListener('click',()=>{
  refreshTrainingLaunch();
 }));
 if(launchTraining)launchTraining.addEventListener('click',()=>{
- if(!launchTraining.disabled&&launchInfo)launchInfo.textContent='Le lancement des exercices sera disponible après l’intégration du moteur de calcul.';
+ if(!launchTraining.disabled&&launchInfo)launchInfo.textContent=selectedTopic==='binaire'&&selectedDifficulty==='1'?'Prototype : conversion de la première ligne en binaire. Les autres lignes arrivent ensuite.':'Cette combinaison sera disponible dans une prochaine étape du prototype.';
 });
 refreshTrainingLaunch();
 
