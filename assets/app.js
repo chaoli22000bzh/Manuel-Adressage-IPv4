@@ -51,3 +51,6 @@ if(pepetteToggle1)pepetteToggle1.addEventListener('click',()=>{pepetteState.one=
 if(pepetteToggle)pepetteToggle.addEventListener('click',()=>{pepetteState.two=!pepetteState.two;updatePepetteTips()});
 
 const binaryHelpToggle=document.getElementById('binary-help-toggle');if(binaryHelpToggle)binaryHelpToggle.addEventListener('click',()=>{const panel=document.getElementById('binary-help-panel');const open=panel.hidden;panel.hidden=!open;binaryHelpToggle.setAttribute('aria-expanded',String(open));binaryHelpToggle.textContent=open?'Refermer le coup de patte':'Voir le coup de patte'});
+
+// Transition pédagogique entre les sous-chapitres 1.1 et 1.2.
+const goDecimal=document.getElementById('go-decimal');if(goDecimal)goDecimal.addEventListener('click',()=>{const binary=document.getElementById('binaire'),decimal=document.getElementById('decimal-fold');if(!binary||!decimal)return;binary.open=false;decimal.open=true;decimal.scrollIntoView({behavior:'smooth',block:'start'});});
