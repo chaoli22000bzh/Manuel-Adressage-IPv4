@@ -156,3 +156,15 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 #fiche .ipv4-intro .octet-grid+h3{margin-top:10px}
 #fiche .ipv4-intro .octet-grid+h3+p{margin-bottom:10px}
 @media(max-width:520px){#fiche .chapter-body{padding-top:10px}#fiche .example-download-layout{gap:8px}#fiche .worksheet-download{min-height:58px}#fiche .octet-grid>div{padding:5px 2px}}
+
+/* V0.3.39 - pictogrammes pédagogiques et bouton de lancement conditionnel */
+.training-options .training-option{display:flex;align-items:center;justify-content:center;gap:12px}
+.training-topic-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;min-width:39px;height:33px;padding:0 5px;border-radius:7px;background:var(--accentlight);color:var(--accent);font-size:13px;font-weight:850;letter-spacing:-.05em}
+.training-topic-icons{display:flex;flex-wrap:wrap;justify-content:center;gap:5px}
+.training-topic-icons .training-topic-icon{min-width:34px}
+.training-options .training-option:nth-child(4){flex-direction:column;gap:13px}
+.training-launch{margin-top:23px;text-align:center}
+.training-launch button{display:block;width:100%;border:0;border-radius:11px;background:#2563eb;color:#fff;font-weight:750;padding:15px 16px;line-height:1.4}
+.training-launch button:disabled{background:#9ca8b7;color:#fff;cursor:not-allowed}
+.training-launch-info{font-size:13px;margin:9px 0 0;color:var(--muted)}
+@media(max-width:520px){.training-options .training-option{gap:7px}.training-topic-icon{min-width:31px;font-size:11px}}
