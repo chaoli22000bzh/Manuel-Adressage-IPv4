@@ -55,15 +55,22 @@ const binaryHelpToggle=document.getElementById('binary-help-toggle');if(binaryHe
 // Transition pédagogique entre les sous-chapitres 1.1 et 1.2.
 const goDecimal=document.getElementById('go-decimal');if(goDecimal)goDecimal.addEventListener('click',()=>{const binary=document.getElementById('binaire'),decimal=document.getElementById('decimal-fold');if(!binary||!decimal)return;binary.open=false;decimal.open=true;decimal.scrollIntoView({behavior:'smooth',block:'start'});});
 
-// V0.3.32 - choix entre poursuivre le cours et découvrir les niveaux d'entraînement.
-const binaryTrainingButton=document.getElementById('go-binary-training');
-const binaryTrainingChoice=document.getElementById('binary-training-choice');
-if(binaryTrainingButton&&binaryTrainingChoice)binaryTrainingButton.addEventListener('click',()=>{
-  const open=binaryTrainingChoice.hidden;
-  binaryTrainingChoice.hidden=!open;
-  binaryTrainingButton.setAttribute('aria-expanded',String(open));
-  if(open)binaryTrainingChoice.scrollIntoView({behavior:'smooth',block:'nearest'});
-});
+// V0.3.33 - navigation vers l'entraînement commun et les sous-réseaux.
+const goTraining=document.getElementById('go-training');
+const goFlsm=document.getElementById('go-flsm');
+function openNextChapter(targetId){
+ const target=document.getElementById(targetId);
+ const ipv4=document.getElementById('ipv4');
+ if(!target)return;
+ if(ipv4)ipv4.open=(targetId==='training-fold');
+ if(targetId==='flsm'){
+   const flsm=document.getElementById('flsm');
+   if(flsm)flsm.open=true;
+ }else target.open=true;
+ target.scrollIntoView({behavior:'smooth',block:'start'});
+}
+if(goTraining)goTraining.addEventListener('click',()=>openNextChapter('training-fold'));
+if(goFlsm)goFlsm.addEventListener('click',()=>openNextChapter('flsm'));
 
 // V0.3.21 - progression décimale et aide de Pépette sur les puissances.
 document.querySelectorAll('.decimal-reveal').forEach(button=>button.addEventListener('click',()=>{const card=button.closest('.decimal-step');const shown=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(shown));button.textContent=shown?'Masquer':'Afficher';card.querySelectorAll('.decimal-value').forEach(cell=>{cell.textContent=shown?cell.dataset.value:'?';cell.classList.toggle('revealed',shown)});card.querySelector('.decimal-explanation').hidden=true;card.querySelectorAll('.decimal-calculation').forEach(cell=>cell.hidden=!shown);}));
