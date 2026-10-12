@@ -137,3 +137,22 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 
 /* V0.3.37 - difficulté Avec Pépette sans miniature */
 .training-difficulties button[data-training-difficulty="1"] .difficulty-bars{margin-right:0}
+
+/* V0.3.38 - introduction compacte du chapitre IPv4 */
+#fiche{scroll-margin-top:90px}
+#fiche .chapter-body{padding-top:12px}
+#fiche .ipv4-intro{margin-bottom:12px}
+#fiche .ipv4-intro>p{margin-bottom:8px;line-height:1.4}
+#fiche .example-download-layout{margin:7px 0 10px;gap:12px}
+#fiche .ipv4-example{padding:7px 12px}
+#fiche .ipv4-example span{line-height:1.2}
+#fiche .ipv4-example strong{line-height:1.2}
+#fiche .worksheet-download{min-height:66px;padding:8px 12px}
+#fiche .ipv4-intro h3{font-size:16px;margin:10px 0 2px}
+#fiche .octet-grid{gap:8px}
+#fiche .octet-grid>div{padding:5px 4px}
+#fiche .octet-grid strong{line-height:1.25}
+#fiche .octet-grid small{line-height:1.25}
+#fiche .ipv4-intro .octet-grid+h3{margin-top:10px}
+#fiche .ipv4-intro .octet-grid+h3+p{margin-bottom:10px}
+@media(max-width:520px){#fiche .chapter-body{padding-top:10px}#fiche .example-download-layout{gap:8px}#fiche .worksheet-download{min-height:58px}#fiche .octet-grid>div{padding:5px 2px}}
