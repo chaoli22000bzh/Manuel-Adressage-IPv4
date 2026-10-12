@@ -168,3 +168,17 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .training-launch button:disabled{background:#9ca8b7;color:#fff;cursor:not-allowed}
 .training-launch-info{font-size:13px;margin:9px 0 0;color:var(--muted)}
 @media(max-width:520px){.training-options .training-option{gap:7px}.training-topic-icon{min-width:31px;font-size:11px}}
+
+/* V0.3.40 - alignement des pictogrammes et couleurs distinctes */
+.training-options .training-option:not(:nth-child(4)){display:grid;grid-template-columns:40px minmax(0,1fr);align-items:center;justify-content:initial;gap:14px;text-align:left;padding-left:clamp(15px,17%,85px)}
+.training-options .training-option:not(:nth-child(4)) .training-topic-icon{width:40px;min-width:40px}
+.training-options .training-option:nth-child(4){display:flex;flex-direction:row;align-items:center;justify-content:center;gap:16px}
+.training-options .training-option:nth-child(4) .training-topic-icons{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:center;gap:8px}
+.training-options .training-option:nth-child(4) .training-topic-icon{width:40px;min-width:40px}
+.training-options .training-option[data-training-topic="binaire"] .training-topic-icon,
+.training-options .training-option:nth-child(4) .training-topic-icon:nth-child(1){background:#1e4f9a;color:#dcecff}
+.training-options .training-option[data-training-topic="decimal"] .training-topic-icon,
+.training-options .training-option:nth-child(4) .training-topic-icon:nth-child(2){background:#8a510e;color:#fff0c8}
+.training-options .training-option[data-training-topic="hotes"] .training-topic-icon,
+.training-options .training-option:nth-child(4) .training-topic-icon:nth-child(3){background:#176e51;color:#d8ffe9}
+@media(max-width:520px){.training-options .training-option:not(:nth-child(4)){padding-left:9px;grid-template-columns:34px minmax(0,1fr);gap:8px}.training-options .training-option:not(:nth-child(4)) .training-topic-icon,.training-options .training-option:nth-child(4) .training-topic-icon{width:34px;min-width:34px}.training-options .training-option:nth-child(4){gap:8px}}
