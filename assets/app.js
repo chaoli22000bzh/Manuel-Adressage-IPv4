@@ -72,6 +72,14 @@ function openNextChapter(targetId){
 if(goTraining)goTraining.addEventListener('click',()=>openNextChapter('training-fold'));
 if(goFlsm)goFlsm.addEventListener('click',()=>openNextChapter('flsm'));
 
+// V0.3.34 - choix visuel des exercices et de leur difficulté (sans lancement).
+for(const attribute of ['data-training-topic','data-training-difficulty']){
+ const buttons=[...document.querySelectorAll('button['+attribute+']')];
+ buttons.forEach(button=>button.addEventListener('click',()=>{
+  buttons.forEach(other=>other.setAttribute('aria-pressed',String(other===button)));
+ }));
+}
+
 // V0.3.21 - progression décimale et aide de Pépette sur les puissances.
 document.querySelectorAll('.decimal-reveal').forEach(button=>button.addEventListener('click',()=>{const card=button.closest('.decimal-step');const shown=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(shown));button.textContent=shown?'Masquer':'Afficher';card.querySelectorAll('.decimal-value').forEach(cell=>{cell.textContent=shown?cell.dataset.value:'?';cell.classList.toggle('revealed',shown)});card.querySelector('.decimal-explanation').hidden=true;card.querySelectorAll('.decimal-calculation').forEach(cell=>cell.hidden=!shown);}));
 const decimalSummaryButton=document.getElementById('decimal-summary-toggle');if(decimalSummaryButton)decimalSummaryButton.addEventListener('click',()=>{const panel=document.getElementById('decimal-summary');panel.hidden=!panel.hidden;decimalSummaryButton.textContent=panel.hidden?'Afficher le tableau corrigé':'Masquer le tableau corrigé';decimalSummaryButton.setAttribute('aria-expanded',String(!panel.hidden))});
