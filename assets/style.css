@@ -35,3 +35,6 @@
 
 /* V0.3.5 - construction ligne par ligne et astuce Pépette */
 .lesson-step{margin-top:18px}.lesson-step .bit-table td.host-row{border-right-color:transparent}.pepette-tip{max-width:440px;margin:18px 0 24px auto;padding:16px!important;border-radius:14px}.pepette-heading{display:flex;align-items:center;gap:14px}.pepette-heading img{width:88px;height:88px;object-fit:cover;border-radius:12px;flex:none}.pepette-heading h3{margin:4px 0}.pepette-rows{display:grid;gap:5px;margin:12px 0}.pepette-rows>div{display:flex;align-items:center;gap:12px}.pepette-rows strong{display:inline-block;min-width:36px;text-align:center;font-family:monospace;font-size:18px}.pepette-rows span{font-size:13px}.pepette-tip small{display:block;margin-top:9px}
+
+/* V0.3.7 - adresse IPv4 d'origine toujours verte, CIDR neutre tant que masqué */
+.bit-table td.original-ip,.bit-table td.original-ip.one{background:#18764b!important;color:#fff!important;border-color:#259966!important}.bit-table tr.host-row td.original-ip{border-right-color:#259966!important}.bit-table-lesson td.neutral,.bit-table-lesson td.neutral.one{background:var(--accentlight);color:var(--ink)}.bit-table-lesson tbody tr:nth-child(2) td.neutral{border-right:1px solid var(--line)!important}
