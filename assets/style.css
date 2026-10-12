@@ -14,3 +14,6 @@
 
 /* Correction affichage horizontal de l'adresse IPv4 colorée */
 .ipv4-example .colored-address{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:baseline;justify-content:center;gap:0;white-space:nowrap;font-size:clamp(20px,4vw,35px)}.ipv4-example .colored-address>span,.ipv4-example .colored-address>i{display:inline!important;flex:none;line-height:1.2}.ipv4-example .colored-address>i{font-style:normal}
+
+/* Palette vive et alignement des cinq éléments de l'adresse IPv4 */
+:root{--ipv4-o1:#f50078;--ipv4-o2:#00b84c;--ipv4-o3:#a000ff;--ipv4-o4:#e18b00;--ipv4-cidr:#006cf0}body.dark{--ipv4-o1:#ff1493;--ipv4-o2:#39ff14;--ipv4-o3:#c54bff;--ipv4-o4:#ffff00;--ipv4-cidr:#00d5ff}.ipv4-example .colored-address{display:flex;align-items:baseline;justify-content:center;gap:0;white-space:nowrap;font-size:clamp(25px,4vw,40px);font-weight:850;line-height:1.2}.ipv4-example .colored-address>span,.ipv4-example .colored-address>i{display:inline!important;font-size:inherit!important;font-weight:inherit!important;line-height:inherit!important;vertical-align:baseline}.ipv4-example .colored-address>i{color:var(--ink);font-style:normal;padding:0 .035em}
