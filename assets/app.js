@@ -19,3 +19,6 @@ const links=[...document.querySelectorAll('nav a')];links.forEach(a=>a.addEventL
 document.querySelectorAll('.chapter').forEach(chapter=>chapter.addEventListener('toggle',()=>{if(chapter.open)document.querySelectorAll('.chapter').forEach(other=>{if(other!==chapter)other.open=false})}));
 document.querySelectorAll('.subfold').forEach(fold=>fold.addEventListener('toggle',()=>{if(fold.open)fold.closest('.chapter').querySelectorAll('.subfold').forEach(other=>{if(other!==fold)other.open=false})}));
 renderTable('table-ip-only','ip-only');renderTable('table-host','host');for(let k=0;k<4;k++)renderTable('table-line-'+k,'line-'+k);renderTable('table-full','full');updateFlsm();
+
+// Tableau de conversion décimal/binaire, construit localement sans connexion Internet.
+const binaryReference=document.getElementById('binary-reference-rows');if(binaryReference){binaryReference.innerHTML=Array.from({length:256},(_,n)=>'<tr><td>'+n+'</td><td>'+n.toString(2).padStart(8,'0')+'</td></tr>').join('');}
