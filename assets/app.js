@@ -22,3 +22,6 @@ renderTable('table-ip-only','ip-only');renderTable('table-host','host');for(let 
 
 // Tableau de conversion décimal/binaire, construit localement sans connexion Internet.
 const binaryReference=document.getElementById('binary-reference-rows');if(binaryReference){binaryReference.innerHTML=Array.from({length:256},(_,n)=>'<tr><td>'+n+'</td><td>'+n.toString(2).padStart(8,'0')+'</td></tr>').join('');}
+
+// L'astuce de Pépette n'agit que sur les deux derniers bits des quatre adresses calculées.
+const pepetteToggle=document.getElementById('pepette-toggle');if(pepetteToggle){pepetteToggle.addEventListener('click',()=>{const table=document.querySelector('#table-full table');if(!table)return;const active=!table.classList.contains('pepette-active');table.classList.toggle('pepette-active',active);for(const tr of [...table.tBodies[0].rows].slice(2)){for(const td of [...tr.cells].slice(-2)){if(active&&td.textContent.trim()===''){td.textContent='0';td.classList.add('pepette-zero')}else if(!active&&td.classList.contains('pepette-zero')){td.textContent='';td.classList.remove('pepette-zero')}}}pepetteToggle.textContent=active?'Masquer Pépette':'Afficher Pépette';pepetteToggle.setAttribute('aria-pressed',String(active));document.getElementById('pepette-explanation').hidden=!active})}
