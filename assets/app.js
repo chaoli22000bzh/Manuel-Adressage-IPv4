@@ -55,6 +55,16 @@ const binaryHelpToggle=document.getElementById('binary-help-toggle');if(binaryHe
 // Transition pédagogique entre les sous-chapitres 1.1 et 1.2.
 const goDecimal=document.getElementById('go-decimal');if(goDecimal)goDecimal.addEventListener('click',()=>{const binary=document.getElementById('binaire'),decimal=document.getElementById('decimal-fold');if(!binary||!decimal)return;binary.open=false;decimal.open=true;decimal.scrollIntoView({behavior:'smooth',block:'start'});});
 
+// V0.3.32 - choix entre poursuivre le cours et découvrir les niveaux d'entraînement.
+const binaryTrainingButton=document.getElementById('go-binary-training');
+const binaryTrainingChoice=document.getElementById('binary-training-choice');
+if(binaryTrainingButton&&binaryTrainingChoice)binaryTrainingButton.addEventListener('click',()=>{
+  const open=binaryTrainingChoice.hidden;
+  binaryTrainingChoice.hidden=!open;
+  binaryTrainingButton.setAttribute('aria-expanded',String(open));
+  if(open)binaryTrainingChoice.scrollIntoView({behavior:'smooth',block:'nearest'});
+});
+
 // V0.3.21 - progression décimale et aide de Pépette sur les puissances.
 document.querySelectorAll('.decimal-reveal').forEach(button=>button.addEventListener('click',()=>{const card=button.closest('.decimal-step');const shown=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(shown));button.textContent=shown?'Masquer':'Afficher';card.querySelectorAll('.decimal-value').forEach(cell=>{cell.textContent=shown?cell.dataset.value:'?';cell.classList.toggle('revealed',shown)});card.querySelector('.decimal-explanation').hidden=true;card.querySelectorAll('.decimal-calculation').forEach(cell=>cell.hidden=!shown);}));
 const decimalSummaryButton=document.getElementById('decimal-summary-toggle');if(decimalSummaryButton)decimalSummaryButton.addEventListener('click',()=>{const panel=document.getElementById('decimal-summary');panel.hidden=!panel.hidden;decimalSummaryButton.textContent=panel.hidden?'Afficher le tableau corrigé':'Masquer le tableau corrigé';decimalSummaryButton.setAttribute('aria-expanded',String(!panel.hidden))});
