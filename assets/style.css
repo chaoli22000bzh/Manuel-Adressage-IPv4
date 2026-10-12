@@ -182,3 +182,20 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .training-options .training-option[data-training-topic="hotes"] .training-topic-icon,
 .training-options .training-option:nth-child(4) .training-topic-icon:nth-child(3){background:#176e51;color:#d8ffe9}
 @media(max-width:520px){.training-options .training-option:not(:nth-child(4)){padding-left:9px;grid-template-columns:34px minmax(0,1fr);gap:8px}.training-options .training-option:not(:nth-child(4)) .training-topic-icon,.training-options .training-option:nth-child(4) .training-topic-icon{width:34px;min-width:34px}.training-options .training-option:nth-child(4){gap:8px}}
+
+
+/* V0.3.41 - Prototype d'exercice Pépette, sans modifier la selection. */
+.pepette-exercise{margin-top:20px;scroll-margin-top:100px}
+.pepette-exercise[hidden]{display:none!important}
+.pepette-octets{display:grid;gap:12px}
+.pepette-octet{border:1px solid var(--border,#9ca3af);border-radius:12px;padding:10px;opacity:.58}
+.pepette-octet.is-active{opacity:1;outline:2px solid #2563eb;outline-offset:1px}
+.pepette-bits{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:3px;margin-top:6px}
+.pepette-weight{text-align:center;font-size:clamp(9px,2.2vw,13px);font-weight:700}
+.pepette-bit{min-width:0;min-height:35px;border:1px solid #94a3b8;border-radius:5px;background:transparent;color:inherit;font-weight:700;cursor:pointer}
+.pepette-bit.is-one{background:#2563eb;color:#fff;border-color:#2563eb}
+.pepette-bit:disabled{cursor:default}
+.pepette-action{margin:8px 8px 0 0;padding:9px 14px;border-radius:9px;border:1px solid #2563eb;background:#2563eb;color:#fff;font-weight:700;cursor:pointer}
+.pepette-total{font-weight:700;margin-top:15px}
+.pepette-success{color:#16a34a;font-weight:700}
+.pepette-hint{border-left:3px solid #2563eb;padding:9px 12px;background:rgba(37,99,235,.08)}
