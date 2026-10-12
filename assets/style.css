@@ -32,3 +32,6 @@
 
 /* V0.3.4 : alignement exact de l'annotation sur les cellules du tableau */
 .network-host-annotation{min-width:0!important;width:max-content;justify-content:flex-start}.network-host-annotation .annotation-spacer,.network-host-annotation .annotation-track{min-width:0!important}.network-host-annotation .annotation-track{gap:0!important}.network-host-annotation .annotation-network,.network-host-annotation .annotation-host{flex-shrink:0!important}.network-host-annotation .annotation-network{border-radius:5px 0 0 5px}.network-host-annotation .annotation-host{border-radius:0 5px 5px 0}
+
+/* V0.3.5 - construction ligne par ligne et astuce Pépette */
+.lesson-step{margin-top:18px}.lesson-step .bit-table td.host-row{border-right-color:transparent}.pepette-tip{max-width:440px;margin:18px 0 24px auto;padding:16px!important;border-radius:14px}.pepette-heading{display:flex;align-items:center;gap:14px}.pepette-heading img{width:88px;height:88px;object-fit:cover;border-radius:12px;flex:none}.pepette-heading h3{margin:4px 0}.pepette-rows{display:grid;gap:5px;margin:12px 0}.pepette-rows>div{display:flex;align-items:center;gap:12px}.pepette-rows strong{display:inline-block;min-width:36px;text-align:center;font-family:monospace;font-size:18px}.pepette-rows span{font-size:13px}.pepette-tip small{display:block;margin-top:9px}
