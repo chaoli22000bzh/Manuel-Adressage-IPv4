@@ -56,7 +56,7 @@ const binaryHelpToggle=document.getElementById('binary-help-toggle');if(binaryHe
 const goDecimal=document.getElementById('go-decimal');if(goDecimal)goDecimal.addEventListener('click',()=>{const binary=document.getElementById('binaire'),decimal=document.getElementById('decimal-fold');if(!binary||!decimal)return;binary.open=false;decimal.open=true;decimal.scrollIntoView({behavior:'smooth',block:'start'});});
 
 // V0.3.21 - progression décimale et aide de Pépette sur les puissances.
-document.querySelectorAll('.decimal-reveal').forEach(button=>button.addEventListener('click',()=>{const card=button.closest('.decimal-step');const shown=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(shown));button.textContent=shown?'Masquer':'Afficher';card.querySelectorAll('.decimal-value').forEach(cell=>{cell.textContent=shown?cell.dataset.value:'?';cell.classList.toggle('revealed',shown)});card.querySelector('.decimal-explanation').hidden=!shown;}));
+document.querySelectorAll('.decimal-reveal').forEach(button=>button.addEventListener('click',()=>{const card=button.closest('.decimal-step');const shown=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(shown));button.textContent=shown?'Masquer':'Afficher';card.querySelectorAll('.decimal-value').forEach(cell=>{cell.textContent=shown?cell.dataset.value:'?';cell.classList.toggle('revealed',shown)});card.querySelector('.decimal-explanation').hidden=true;card.querySelectorAll('.decimal-calculation').forEach(cell=>cell.hidden=!shown);}));
 const decimalSummaryButton=document.getElementById('decimal-summary-toggle');if(decimalSummaryButton)decimalSummaryButton.addEventListener('click',()=>{const panel=document.getElementById('decimal-summary');panel.hidden=!panel.hidden;decimalSummaryButton.textContent=panel.hidden?'Afficher le tableau corrigé':'Masquer le tableau corrigé';decimalSummaryButton.setAttribute('aria-expanded',String(!panel.hidden))});
 const goHotes=document.getElementById('go-hotes');if(goHotes)goHotes.addEventListener('click',()=>{document.getElementById('decimal-fold').open=false;const next=document.getElementById('hotes-fold');next.open=true;next.scrollIntoView({behavior:'smooth',block:'start'})});
 const powersButton=document.getElementById('pepette-powers-toggle');if(powersButton)powersButton.addEventListener('click',()=>{const panel=document.getElementById('pepette-powers-panel');panel.hidden=!panel.hidden;powersButton.textContent=panel.hidden?'Voir le coup de patte':'Refermer le coup de patte';powersButton.setAttribute('aria-expanded',String(!panel.hidden))});
@@ -68,10 +68,10 @@ for(const card of document.querySelectorAll('.decimal-step')){
  const values=[...table.querySelectorAll('.decimal-value')].map(td=>td.dataset.value);
  const names=['1er octet','2e octet','3e octet','4e octet'];
  let markup='<thead><tr><th class="decimal-row-name"></th>'+names.map((name,o)=>'<th colspan="8" class="decimal-octet-title octet-'+(o+1)+'">'+name+'</th>').join('')+'</tr><tr><th class="decimal-row-name">Poids décimaux</th>';
- for(let i=0;i<32;i++)markup+='<th class="decimal-weight octet-'+(Math.floor(i/8)+1)+'">'+(128>>(i%8))+'</th>';
+ for(let i=0;i<32;i++){const o=Math.floor(i/8),b=i%8;markup+='<th class="decimal-weight octet-'+(o+1)+(binary[o][b]==='1'?' decimal-weight-active':'')+'">'+(128>>b)+'</th>'}
  markup+='</tr></thead><tbody><tr><th class="decimal-row-name">Binaire</th>';
  for(let o=0;o<4;o++)for(let b=0;b<8;b++)markup+='<td class="decimal-bit octet-'+(o+1)+(binary[o][b]==='1'?' decimal-one':'')+'">'+binary[o][b]+'</td>';
  markup+='</tr><tr><th class="decimal-row-name">Décimal</th>';
  for(let o=0;o<4;o++)markup+='<td colspan="8" class="decimal-value octet-'+(o+1)+'" data-value="'+values[o]+'">?</td>';
- markup+='</tr></tbody>';table.innerHTML=markup;
+ markup+='</tr><tr class="decimal-calculations-row"><th class="decimal-row-name">Calcul</th>';for(let o=0;o<4;o++){const weights=[128,64,32,16,8,4,2,1].filter((_,b)=>binary[o][b]==='1');markup+='<td colspan="8" class="decimal-calculation octet-'+(o+1)+'" hidden><strong>'+values[o]+'</strong> = '+weights.join(' + ')+'</td>';}markup+='</tr></tbody>';table.innerHTML=markup;card.querySelector('.decimal-explanation').hidden=true;
 }
