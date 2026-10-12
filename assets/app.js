@@ -77,13 +77,35 @@ function openNextChapter(targetId){
 if(goTraining)goTraining.addEventListener('click',()=>openNextChapter('training-fold'));
 if(goFlsm)goFlsm.addEventListener('click',()=>openNextChapter('flsm'));
 
-// V0.3.34 - choix visuel des exercices et de leur difficulté (sans lancement).
-for(const attribute of ['data-training-topic','data-training-difficulty']){
- const buttons=[...document.querySelectorAll('button['+attribute+']')];
- buttons.forEach(button=>button.addEventListener('click',()=>{
-  buttons.forEach(other=>other.setAttribute('aria-pressed',String(other===button)));
- }));
+// V0.3.39 - aucun choix initial, lancement disponible après deux sélections.
+const trainingTopics=[...document.querySelectorAll('[data-training-topic]')];
+const trainingDifficulties=[...document.querySelectorAll('[data-training-difficulty]')];
+const launchTraining=document.getElementById('launch-training');
+const launchInfo=document.getElementById('training-launch-info');
+let selectedTopic=null,selectedDifficulty=null;
+const topicNames={binaire:'Tableau en binaire',decimal:'Tableau en décimal',hotes:'Calcul du nombre d’hôtes',complet:'Exercice complet'};
+const difficultyNames={'1':'Avec Pépette','2':'Je me débrouille','3':'Je relève le défi'};
+function refreshTrainingLaunch(){
+ if(!launchTraining)return;
+ const ready=selectedTopic!==null&&selectedDifficulty!==null;
+ launchTraining.disabled=!ready;
+ launchTraining.textContent=ready?'Lancer : '+topicNames[selectedTopic]+' + '+difficultyNames[selectedDifficulty]:selectedTopic===null&&selectedDifficulty===null?'Je choisis mon exercice et ma difficulté':selectedTopic===null?'Je choisis mon exercice':'Je choisis ma difficulté';
+ if(launchInfo)launchInfo.textContent='';
 }
+trainingTopics.forEach(button=>button.addEventListener('click',()=>{
+ selectedTopic=button.dataset.trainingTopic;
+ trainingTopics.forEach(other=>other.setAttribute('aria-pressed',String(other===button)));
+ refreshTrainingLaunch();
+}));
+trainingDifficulties.forEach(button=>button.addEventListener('click',()=>{
+ selectedDifficulty=button.dataset.trainingDifficulty;
+ trainingDifficulties.forEach(other=>other.setAttribute('aria-pressed',String(other===button)));
+ refreshTrainingLaunch();
+}));
+if(launchTraining)launchTraining.addEventListener('click',()=>{
+ if(!launchTraining.disabled&&launchInfo)launchInfo.textContent='Le lancement des exercices sera disponible après l’intégration du moteur de calcul.';
+});
+refreshTrainingLaunch();
 
 // V0.3.21 - progression décimale et aide de Pépette sur les puissances.
 document.querySelectorAll('.decimal-reveal').forEach(button=>button.addEventListener('click',()=>{const card=button.closest('.decimal-step');const shown=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(shown));button.textContent=shown?'Masquer':'Afficher';card.querySelectorAll('.decimal-value').forEach(cell=>{cell.textContent=shown?cell.dataset.value:'?';cell.classList.toggle('revealed',shown)});card.querySelector('.decimal-explanation').hidden=true;card.querySelectorAll('.decimal-calculation').forEach(cell=>cell.hidden=!shown);}));
