@@ -27,7 +27,13 @@ if(host&&launch){
     const originalRows=document.querySelector('#binary-reference-rows');
     const copiedRows=copied.querySelector('.binary-reference tbody');
     if(originalRows&&copiedRows)copiedRows.replaceChildren(...Array.from(originalRows.children).map(row=>row.cloneNode(true)));
-    courseHelp.append(copied);
+    const pepetteIntro=el('div','pepette-course-intro');
+    const photo=el('img','pepette-course-photo');
+    photo.src='assets/pepette.webp';
+    photo.alt='Pépette, la mascotte du manuel';
+    photo.loading='lazy';
+    pepetteIntro.append(photo,copied);
+    courseHelp.append(pepetteIntro);
    }
   }
   host.append(courseHelp);
