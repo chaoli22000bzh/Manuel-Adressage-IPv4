@@ -246,3 +246,6 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .pepette-unified-line,.pepette-unified-octet:not(:first-child) .pepette-unified-line{padding-top:22px}
 .pepette-unified-line .pepette-line-label{position:absolute;top:4px;left:4px;margin:0}
 @media(max-width:650px){.pepette-unified-line,.pepette-unified-octet:not(:first-child) .pepette-unified-line{padding-top:20px}}
+
+/* V0.3.49 - Validation directement sous l'octet IPv4 actif. */
+.pepette-octet-next{display:block;width:100%;max-width:100%;margin:10px 0 0;padding:9px 5px;white-space:normal;font-size:clamp(10px,1.1vw,14px)}
