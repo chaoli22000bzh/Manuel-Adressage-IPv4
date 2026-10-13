@@ -40,47 +40,45 @@ if(host&&launch){
    }
   }
   if(showCourseHelp)host.append(courseHelp);
-  const table=el('div','pepette-octets');
+  // Un seul tableau : chaque octet contient son en-tête et les lignes successives.
+  const table=el('div','pepette-octets pepette-unified-grid');
   octets.forEach((value,i)=>{
-   const part=el('section','pepette-octet'+(stage==='ip'&&i===octet?' is-active':' is-complete'));
+   const part=el('section','pepette-octet pepette-unified-octet');
    part.append(el('strong',null,'Octet '+(i+1)+' : '+value));
-   const powerRow=el('div','pepette-bits');
-   weights.forEach((w,j)=>{const power=el('span','pepette-power');power.append(document.createTextNode('2'));const sup=el('sup',null,String(7-j));power.append(sup);powerRow.append(power);});
-   part.append(powerRow);
-   const weightRow=el('div','pepette-bits');
-   weights.forEach(w=>weightRow.append(el('span','pepette-weight',String(w))));
-   part.append(weightRow);
-   const row=el('div','pepette-bits');
+   const powers=el('div','pepette-bits');
+   weights.forEach((w,j)=>{const p=el('span','pepette-power');p.append(document.createTextNode('2'),el('sup',null,String(7-j)));powers.append(p);});
+   part.append(powers);
+   const vals=el('div','pepette-bits');
+   weights.forEach(w=>vals.append(el('span','pepette-weight',String(w))));
+   part.append(vals);
+   const ipLine=el('div','pepette-unified-line'+(stage==='ip'&&i===octet?' is-active':' is-complete'));
+   if(i===0)ipLine.append(el('span','pepette-line-label','IPv4'));
+   const ipRow=el('div','pepette-bits');
    weights.forEach((w,j)=>{
     const cell=el('button','pepette-bit'+(bits[i][j]?' is-one':''),bits[i][j]?'1':'');
     cell.type='button';cell.disabled=stage!=='ip'||i!==octet;
-    cell.setAttribute('aria-label','Octet '+(i+1)+', poids '+w+', bit '+(bits[i][j]?'1':'0'));
+    cell.setAttribute('aria-label','IPv4, octet '+(i+1)+', poids '+w+', bit '+(bits[i][j]?'1':'0'));
     cell.setAttribute('aria-pressed',String(bits[i][j]));
     cell.addEventListener('click',()=>{bits[i][j]=!bits[i][j];render();});
-    row.append(cell);
+    ipRow.append(cell);
    });
-   part.append(row);table.append(part);
-  });
-  host.append(table);
-  if(stage!=='ip'){
-   host.append(el('h4','pepette-line-heading','B - Je place le CIDR : /'+cidr));
-   const cidrTable=el('div','pepette-octets pepette-cidr-grid');
-   for(let i=0;i<4;i++){
-    const part=el('section','pepette-octet'+(stage==='cidr'?' is-active':' is-complete'));
-    part.append(el('strong',null,'Octet '+(i+1)));
-    const powers=el('div','pepette-bits');
-    weights.forEach((w,j)=>{const p=el('span','pepette-power');p.append(document.createTextNode('2'),el('sup',null,String(7-j)));powers.append(p);});
-    part.append(powers);
-    const vals=el('div','pepette-bits');weights.forEach(w=>vals.append(el('span','pepette-weight',String(w))));part.append(vals);
+   ipLine.append(ipRow);part.append(ipLine);
+   if(stage!=='ip'){
+    const cidrLine=el('div','pepette-unified-line'+(stage==='cidr'?' is-active':' is-complete'));
+    if(i===0)cidrLine.append(el('span','pepette-line-label','CIDR /'+cidr));
     const row=el('div','pepette-bits');
     for(let j=0;j<8;j++){
      const k=i*8+j,cell=el('button','pepette-bit pepette-cidr-bit'+(cidrBits[k]?' is-one':''),cidrBits[k]?'1':'');
      cell.type='button';cell.disabled=stage!=='cidr';cell.dataset.bit=String(k);
      cell.setAttribute('aria-label','Bit CIDR '+(k+1));cell.setAttribute('aria-pressed',String(cidrBits[k]));row.append(cell);
     }
-    part.append(row);cidrTable.append(part);
+    cidrLine.append(row);part.append(cidrLine);
    }
-   host.append(cidrTable);
+   table.append(part);
+  });
+  host.append(table);
+  if(stage!=='ip'){
+   const cidrTable=table;
    if(stage==='cidr'){
     let drag=null;
     const paint=(start,end,value)=>{
