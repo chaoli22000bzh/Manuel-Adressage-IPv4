@@ -217,3 +217,10 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .pepette-course-photo{display:block;width:110px;height:110px;object-fit:contain;border-radius:12px}
 .pepette-course-intro .binary-help-content{min-width:0}
 @media(max-width:600px){.pepette-course-intro{grid-template-columns:70px minmax(0,1fr);gap:10px}.pepette-course-photo{width:70px;height:70px}}
+
+/* V0.3.46 - Bouton d'aide a droite des informations de l'exercice. */
+.pepette-exercise-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.pepette-exercise-heading{min-width:0}
+.pepette-exercise-header>.pepette-action{flex-shrink:0;margin:0;align-self:center}
+.pepette-course-help{margin:0 0 16px}
+@media(max-width:600px){.pepette-exercise-header{flex-wrap:wrap;gap:8px}.pepette-exercise-header>.pepette-action{margin:0 0 4px auto}}
