@@ -241,3 +241,8 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .pepette-line-label{display:block;font-size:10px;font-weight:700;margin-bottom:4px}
 .pepette-unified-octet:not(:first-child) .pepette-unified-line{padding-top:21px}
 @media(max-width:650px){.pepette-line-label{font-size:8px}.pepette-unified-octet:not(:first-child) .pepette-unified-line{padding-top:19px}}
+
+/* Alignement des lignes entre les quatre octets. */
+.pepette-unified-line,.pepette-unified-octet:not(:first-child) .pepette-unified-line{padding-top:22px}
+.pepette-unified-line .pepette-line-label{position:absolute;top:4px;left:4px;margin:0}
+@media(max-width:650px){.pepette-unified-line,.pepette-unified-octet:not(:first-child) .pepette-unified-line{padding-top:20px}}
