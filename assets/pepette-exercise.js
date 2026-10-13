@@ -6,17 +6,17 @@ const launch=document.getElementById('launch-training');
 if(host&&launch){
  const examples=['10.11.12.13/8','172.16.1.1/16','192.168.1.1/24','10.1.2.3/8','172.16.2.1/16','192.168.0.1/24'];
  const weights=[128,64,32,16,8,4,2,1];
- let example=0,octet=0,bits=Array.from({length:4},()=>Array(8).fill(false)),hint=0,done=false,showCourseHelp=false;
+ let example=0,octet=0,bits=Array.from({length:4},()=>Array(8).fill(false)),hint=0,stage='ip',cidrBits=Array(32).fill(false),showCourseHelp=false;
  const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
  const button=(label,fn)=>{const b=el('button','pepette-action',label);b.type='button';b.addEventListener('click',fn);return b;};
- function start(){octet=0;hint=0;done=false;showCourseHelp=false;bits=Array.from({length:4},()=>Array(8).fill(false));host.hidden=false;render();host.scrollIntoView({behavior:'smooth',block:'start'});}
+ function start(){octet=0;hint=0;stage='ip';cidrBits=Array(32).fill(false);showCourseHelp=false;bits=Array.from({length:4},()=>Array(8).fill(false));host.hidden=false;render();host.scrollIntoView({behavior:'smooth',block:'start'});}
  function render(){
   host.replaceChildren();
   const [ip,cidr]=examples[example].split('/'),octets=ip.split('.').map(Number),expected=binaryOctets(ip);
   const header=el('div','pepette-exercise-header');
   const heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Tableau en binaire - Avec Pépette'),el('p',null,'Adresse : '+ip+'/'+cidr));
-  heading.append(el('p','pepette-progress',done?'Première ligne terminée !':'Adresse IPv4 - octet '+(octet+1)+' sur 4'));
+  heading.append(el('p','pepette-progress',stage==='ip'?'Adresse IPv4 - octet '+(octet+1)+' sur 4':stage==='cidr'?'Ligne CIDR - place les bits réseau à 1':'Lignes IPv4 et CIDR terminées !'));
   const helpToggle=button(showCourseHelp?'Masquer le coup de patte de Pépette':'Revoir le binaire avec Pépette',()=>{showCourseHelp=!showCourseHelp;render();});
   helpToggle.setAttribute('aria-expanded',String(showCourseHelp));
   header.append(heading,helpToggle);
@@ -42,7 +42,7 @@ if(host&&launch){
   if(showCourseHelp)host.append(courseHelp);
   const table=el('div','pepette-octets');
   octets.forEach((value,i)=>{
-   const part=el('section','pepette-octet'+(i===octet&&!done?' is-active':''));
+   const part=el('section','pepette-octet'+(stage==='ip'&&i===octet?' is-active':' is-complete'));
    part.append(el('strong',null,'Octet '+(i+1)+' : '+value));
    const powerRow=el('div','pepette-bits');
    weights.forEach((w,j)=>{const power=el('span','pepette-power');power.append(document.createTextNode('2'));const sup=el('sup',null,String(7-j));power.append(sup);powerRow.append(power);});
@@ -53,7 +53,7 @@ if(host&&launch){
    const row=el('div','pepette-bits');
    weights.forEach((w,j)=>{
     const cell=el('button','pepette-bit'+(bits[i][j]?' is-one':''),bits[i][j]?'1':'');
-    cell.type='button';cell.disabled=done||i!==octet;
+    cell.type='button';cell.disabled=stage!=='ip'||i!==octet;
     cell.setAttribute('aria-label','Octet '+(i+1)+', poids '+w+', bit '+(bits[i][j]?'1':'0'));
     cell.setAttribute('aria-pressed',String(bits[i][j]));
     cell.addEventListener('click',()=>{bits[i][j]=!bits[i][j];render();});
@@ -62,10 +62,59 @@ if(host&&launch){
    part.append(row);table.append(part);
   });
   host.append(table);
-  if(done){
-   host.append(el('p','pepette-success','Bravo ! Tu as converti les quatre octets en binaire.'));
-   host.append(button('Nouvelle adresse',()=>{example=(example+1)%examples.length;start();}));
-   host.append(button('Revenir aux choix',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+  if(stage!=='ip'){
+   host.append(el('h4','pepette-line-heading','B - Je place le CIDR : /'+cidr));
+   const cidrTable=el('div','pepette-octets pepette-cidr-grid');
+   for(let i=0;i<4;i++){
+    const part=el('section','pepette-octet'+(stage==='cidr'?' is-active':' is-complete'));
+    part.append(el('strong',null,'Octet '+(i+1)));
+    const powers=el('div','pepette-bits');
+    weights.forEach((w,j)=>{const p=el('span','pepette-power');p.append(document.createTextNode('2'),el('sup',null,String(7-j)));powers.append(p);});
+    part.append(powers);
+    const vals=el('div','pepette-bits');weights.forEach(w=>vals.append(el('span','pepette-weight',String(w))));part.append(vals);
+    const row=el('div','pepette-bits');
+    for(let j=0;j<8;j++){
+     const k=i*8+j,cell=el('button','pepette-bit pepette-cidr-bit'+(cidrBits[k]?' is-one':''),cidrBits[k]?'1':'');
+     cell.type='button';cell.disabled=stage!=='cidr';cell.dataset.bit=String(k);
+     cell.setAttribute('aria-label','Bit CIDR '+(k+1));cell.setAttribute('aria-pressed',String(cidrBits[k]));row.append(cell);
+    }
+    part.append(row);cidrTable.append(part);
+   }
+   host.append(cidrTable);
+   if(stage==='cidr'){
+    let drag=null;
+    const paint=(start,end,value)=>{
+     for(let k=Math.min(start,end);k<=Math.max(start,end);k++)cidrBits[k]=value;
+     cidrTable.querySelectorAll('.pepette-cidr-bit').forEach(cell=>{const k=Number(cell.dataset.bit);cell.classList.toggle('is-one',cidrBits[k]);cell.textContent=cidrBits[k]?'1':'';cell.setAttribute('aria-pressed',String(cidrBits[k]));});
+    };
+    cidrTable.addEventListener('pointerdown',e=>{
+     const cell=e.target.closest('.pepette-cidr-bit');if(!cell||e.button!==0)return;
+     e.preventDefault();const start=Number(cell.dataset.bit);
+     drag={id:e.pointerId,start,last:start,value:!cidrBits[start],original:cidrBits.slice()};
+     cidrTable.setPointerCapture(e.pointerId);paint(start,start,drag.value);
+    });
+    cidrTable.addEventListener('pointermove',e=>{
+     if(!drag||e.pointerId!==drag.id)return;
+     const cell=document.elementFromPoint(e.clientX,e.clientY)?.closest('.pepette-cidr-bit');
+     if(!cell||!cidrTable.contains(cell))return;
+     const end=Number(cell.dataset.bit);if(end===drag.last)return;
+     cidrBits=drag.original.slice();drag.last=end;paint(drag.start,end,drag.value);
+    });
+    cidrTable.addEventListener('pointerup',e=>{if(drag&&e.pointerId===drag.id){drag=null;render();}});
+    cidrTable.addEventListener('pointercancel',e=>{if(drag&&e.pointerId===drag.id){cidrBits=drag.original;drag=null;render();}});
+    const count=cidrBits.filter(Boolean).length,correct=cidrBits.every((v,k)=>v===(k<Number(cidr)));
+    host.append(el('p','pepette-total','Bits réseau à 1 : '+count+' / '+cidr));
+    if(correct){host.append(el('p','pepette-success','Bravo ! Tu as placé les '+cidr+' bits réseau.'));host.append(button('Valider la ligne CIDR',()=>{stage='finished';render();}));}
+    else{
+     host.append(el('p','pepette-guidance','Clique sur les cases ou maintiens le clic et glisse pour remplir plusieurs bits. Un second clic retire un 1.'));
+     host.append(button('Un indice',()=>{hint=Math.min(hint+1,3);render();}));
+     if(hint)host.append(el('p','pepette-hint',hint===1?'Le /'+cidr+' indique le nombre de bits réseau à 1.':hint===2?'Commence à gauche, au premier bit, et avance vers la droite.':'Les '+cidr+' premiers bits sont à 1, les autres restent à 0.'));
+    }
+   }else{
+    host.append(el('p','pepette-success','Bravo ! Tu as terminé les lignes Adresse IPv4 et CIDR.'));
+    host.append(button('Nouvelle adresse',()=>{example=(example+1)%examples.length;start();}));
+    host.append(button('Revenir aux choix',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   }
    return;
   }
   const sum=weights.reduce((total,w,j)=>total+(bits[octet][j]?w:0),0);
@@ -73,7 +122,7 @@ if(host&&launch){
   host.append(el('p','pepette-total','Total de mes bits à 1 : '+sum+' / '+octets[octet]));
   if(ok){
    host.append(el('p','pepette-success','Bravo ! Tu as trouvé '+octets[octet]+'.'));
-   host.append(button(octet===3?'Terminer la ligne':'Octet suivant',()=>{if(octet===3)done=true;else octet++;hint=0;render();}));
+   host.append(button(octet===3?'Ligne suivante : CIDR':'Octet suivant',()=>{if(octet===3)stage='cidr';else octet++;hint=0;render();}));
   }else{
    host.append(el('p','pepette-guidance','Clique sur les cases pour placer les 1. Les cases vides valent 0.'));
    host.append(button('Un indice',()=>{hint=Math.min(hint+1,3);render();}));
