@@ -403,7 +403,7 @@ if(host&&launch){
      cell.type='button';cell.disabled=challengeLocked;
      cell.setAttribute('aria-label',challengeNames[kind]+', octet '+(i+1)+', bit '+(j+1)+', '+(on?'1':'0'));
      cell.setAttribute('aria-pressed',String(on));
-     if(challengeLocked&&on!==correct){cell.classList.add('challenge-error');cell.title='Attendu : '+(correct?'1':'0');cell.textContent=(on?'1':'0')+' → '+(correct?'1':'0');}
+     if(challengeLocked&&on!==correct){cell.classList.add('challenge-error');cell.title='Attendu : '+(correct?'1':'0');cell.textContent=on?'1':'0';cell.setAttribute('aria-label',challengeNames[kind]+', bit '+(index+1)+', réponse '+(on?'1':'0')+', attendu '+(correct?'1':'0'));}
      if(challengeLocked&&on===correct)cell.classList.add('challenge-correct');
      cell.dataset.challengeRow=kind;cell.dataset.challengeIndex=String(index);
      if(!challengeLocked)cell.addEventListener('click',e=>{if(e.detail!==0)return;challengeBits[kind][index]=!challengeBits[kind][index];renderChallenge();});
@@ -478,7 +478,7 @@ if(host&&launch){
   }else{
    const message=challengeResult.errors===0&&challengeResult.barCorrect?'Bravo ! Ton tableau est entièrement correct.':'Résultat : '+challengeResult.errors+' bit(s) incorrect(s). '+(challengeResult.barCorrect?'Barre CIDR correcte.':'Barre CIDR incorrecte : position attendue '+prefix+'.');
    host.append(el('p',challengeResult.errors===0&&challengeResult.barCorrect?'pepette-success':'pepette-hint',message));
-   host.append(el('p','pepette-hint','Dans les cases rouges, la valeur attendue est indiquée après la flèche.'));
+   host.append(el('p','pepette-hint','Les cases rouges signalent une erreur. Survole une case rouge pour voir le bit attendu.'));
    host.append(button('Nouvelle adresse',newChallenge));
    host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
   }
