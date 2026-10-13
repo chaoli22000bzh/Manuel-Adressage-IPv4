@@ -6,10 +6,10 @@ const launch=document.getElementById('launch-training');
 if(host&&launch){
  const examples=['10.11.12.13/8','172.16.1.1/16','192.168.1.1/24','10.1.2.3/8','172.16.2.1/16','192.168.0.1/24'];
  const weights=[128,64,32,16,8,4,2,1];
- let example=0,octet=0,bits=Array.from({length:4},()=>Array(8).fill(false)),hint=0,stage='ip',cidrBits=Array(32).fill(false),barPosition=null,barHint=0,barFeedback='',networkBits=Array.from({length:4},()=>Array(8).fill(false)),networkOctet=0,networkHint=0,extraBits={},extraOctet=0,extraHint=0,reviewChecked=[false,false],showCourseHelp=false;
+ let example=0,octet=0,bits=Array.from({length:4},()=>Array(8).fill(false)),hint=0,stage='ip',cidrBits=Array(32).fill(false),barPosition=null,barHint=0,barFeedback='',networkBits=Array.from({length:4},()=>Array(8).fill(false)),networkOctet=0,networkHint=0,extraBits={},extraOctet=0,extraHint=0,reviewShown=[false,false],showCourseHelp=false;
  const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
  const button=(label,fn)=>{const b=el('button','pepette-action',label);b.type='button';b.addEventListener('click',fn);return b;};
- function start(){octet=0;hint=0;stage='ip';cidrBits=Array(32).fill(false);barPosition=null;barHint=0;barFeedback='';networkBits=Array.from({length:4},()=>Array(8).fill(false));networkOctet=0;networkHint=0;extraBits={first:Array.from({length:4},()=>Array(8).fill(false)),last:Array.from({length:4},()=>Array(8).fill(false)),broadcast:Array.from({length:4},()=>Array(8).fill(false))};extraOctet=0;extraHint=0;reviewChecked=[false,false];showCourseHelp=false;bits=Array.from({length:4},()=>Array(8).fill(false));host.hidden=false;render();host.scrollIntoView({behavior:'smooth',block:'start'});}
+ function start(){octet=0;hint=0;stage='ip';cidrBits=Array(32).fill(false);barPosition=null;barHint=0;barFeedback='';networkBits=Array.from({length:4},()=>Array(8).fill(false));networkOctet=0;networkHint=0;extraBits={first:Array.from({length:4},()=>Array(8).fill(false)),last:Array.from({length:4},()=>Array(8).fill(false)),broadcast:Array.from({length:4},()=>Array(8).fill(false))};extraOctet=0;extraHint=0;reviewShown=[false,false];showCourseHelp=false;bits=Array.from({length:4},()=>Array(8).fill(false));host.hidden=false;render();host.scrollIntoView({behavior:'smooth',block:'start'});}
  function render(){
   host.replaceChildren();
   const [ip,cidr]=examples[example].split('/'),octets=ip.split('.').map(Number),expected=binaryOctets(ip);
@@ -128,6 +128,7 @@ if(host&&launch){
      cell.setAttribute('aria-label','Adresse réseau, octet '+(i+1)+', poids '+w);
      cell.setAttribute('aria-pressed',String(networkBits[i][j]));
      cell.addEventListener('click',()=>{networkBits[i][j]=!networkBits[i][j];render();});
+     if(stage==='review'&&reviewShown[1]&&i===3&&j>=6)cell.classList.add('pepette-review-two');
      networkRow.append(cell);
     });
     networkLine.append(networkRow);part.append(networkLine);
@@ -157,6 +158,8 @@ if(host&&launch){
       cell.setAttribute('aria-pressed',String(extraBits[kind][i][j]));
       cell.dataset.extraBit=String(j);
       if(stage===kind&&i===extraOctet)cell.addEventListener('click',()=>{if(cell.dataset.dragHandled==='true')return;extraBits[kind][i][j]=!extraBits[kind][i][j];render();});
+      if(stage==='review'&&reviewShown[0]&&(kind==='last'||kind==='broadcast')&&i*8+j>=Number(cidr))cell.classList.add('pepette-review-one');
+      if(stage==='review'&&reviewShown[1]&&i===3&&j>=6)cell.classList.add('pepette-review-two');
       row.append(cell);
      });
      if(stage===kind&&i===extraOctet){
@@ -266,20 +269,19 @@ if(host&&launch){
    }else if(stage==='review'){
     host.append(el('p','pepette-success','Les six lignes sont remplies. Vérifie ton tableau avec les deux astuces de Pépette.'));
     const tips=[
-     ['Astuce n° 1 : Je n’oublie pas les 1 !','Pour la dernière IP adressable, les bits hôtes sont à 1, sauf le dernier à 0. Pour le broadcast, tous les bits hôtes sont à 1.'],
-     ['Astuce n° 2 : Je vérifie les deux derniers bits','Réseau : 00. Première IP : 01. Dernière IP : 10. Broadcast : 11.']
+     ['Astuce n° 1 : Je n’oublie pas les 1 !','Observe les bits hôtes, après le CIDR, sur les lignes Dernière IP et Broadcast.','Astuce 1'],
+     ['Astuce n° 2 : Je vérifie les deux derniers bits','Compare les deux dernières cases du quatrième octet : Réseau 00, Première IP 01, Dernière IP 10, Broadcast 11.','Astuce 2']
     ];
-    tips.forEach(([title,detail],i)=>{
+    tips.forEach(([title,detail,name],i)=>{
      const card=el('div','pepette-review-tip'),photo=el('img','pepette-review-photo');
      photo.src='assets/pepette.webp';photo.alt='Pépette';photo.loading='lazy';
      card.append(photo,el('strong',null,title),el('p',null,detail));
-     const label=el('label','pepette-review-check'),check=el('input');
-     check.type='checkbox';check.checked=reviewChecked[i];check.addEventListener('change',()=>{reviewChecked[i]=check.checked;render();});
-     label.append(check,document.createTextNode(' J’ai vérifié mon tableau avec cette astuce.'));
-     card.append(label);host.append(card);
+     const toggle=button((reviewShown[i]?'Masquer ':'Afficher ')+name,()=>{reviewShown[i]=!reviewShown[i];render();});
+     toggle.setAttribute('aria-pressed',String(reviewShown[i]));
+     card.append(toggle);host.append(card);
     });
-    const validate=button('Valider mon exercice',()=>{stage='finished';render();});
-    validate.disabled=!reviewChecked.every(Boolean);host.append(validate);
+    host.append(el('p','pepette-hint','Les couleurs montrent les cases à vérifier directement dans ton tableau.'));
+    host.append(button('Valider mon exercice',()=>{stage='finished';render();}));
    }else if(stage==='finished'){
     host.append(el('p','pepette-success','Bravo ! Tu as terminé et vérifié ton tableau en binaire.'));
     host.append(button('Nouvelle adresse',()=>{example=(example+1)%examples.length;start();}));
