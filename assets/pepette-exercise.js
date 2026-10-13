@@ -36,7 +36,8 @@ if(host&&launch){
    finished:['Exercice terminé !','']
   };
   const instruction=el('div','pepette-step-instruction');
-  instruction.append(el('strong',null,instructions[stage][0]),el('p',null,instructions[stage][1]));
+  instruction.append(el('strong',null,instructions[stage][0]));
+  instructions[stage][1].split(/(?<=\.)\s+/).filter(Boolean).forEach(sentence=>instruction.append(el('p',null,sentence)));
   heading.append(instruction);
   const helpToggle=button(showCourseHelp?'Masquer le coup de patte de Pépette':'Revoir le binaire avec Pépette',()=>{showCourseHelp=!showCourseHelp;render();});
   helpToggle.setAttribute('aria-expanded',String(showCourseHelp));
@@ -73,7 +74,7 @@ if(host&&launch){
    weights.forEach(w=>vals.append(el('span','pepette-weight',String(w))));
    part.append(vals);
    const ipLine=el('div','pepette-unified-line'+(stage==='ip'&&i===octet?' is-active':' is-complete'));
-   if(i===0)ipLine.append(el('span','pepette-line-label','IPv4'));
+   if(i===0)ipLine.append(el('span','pepette-line-label'+(stage==='ip'?' is-current-label':''),'IPv4'));
    const ipRow=el('div','pepette-bits');
    weights.forEach((w,j)=>{
     const cell=el('button','pepette-bit'+(bits[i][j]?' is-one':''),bits[i][j]?'1':'');
@@ -86,7 +87,7 @@ if(host&&launch){
    ipLine.append(ipRow);part.append(ipLine);
    if(stage!=='ip'){
     const cidrLine=el('div','pepette-unified-line'+(stage==='cidr'?' is-active':' is-complete'));
-    if(i===0)cidrLine.append(el('span','pepette-line-label','CIDR /'+cidr));
+    if(i===0)cidrLine.append(el('span','pepette-line-label'+(stage==='cidr'||stage==='bar'?' is-current-label':''),'CIDR /'+cidr));
     const row=el('div','pepette-bits');
     for(let j=0;j<8;j++){
      const k=i*8+j,cell=el('button','pepette-bit pepette-cidr-bit'+(cidrBits[k]?' is-one':''),cidrBits[k]?'1':'');
@@ -119,7 +120,7 @@ if(host&&launch){
    }
    if(['network','first','last','broadcast','review','finished'].includes(stage)){
     const networkLine=el('div','pepette-unified-line'+(stage==='network'&&i===networkOctet?' is-active':' is-complete'));
-    if(i===0)networkLine.append(el('span','pepette-line-label','Réseau'));
+    if(i===0)networkLine.append(el('span','pepette-line-label'+(stage==='network'?' is-current-label':''),'Réseau'));
     const networkRow=el('div','pepette-bits');
     weights.forEach((w,j)=>{
      const cell=el('button','pepette-bit'+(networkBits[i][j]?' is-one':''),networkBits[i][j]?'1':'');
@@ -147,7 +148,7 @@ if(host&&launch){
     for(const kind of kinds){
      if(!['review','finished'].includes(stage)&&kinds.indexOf(kind)>kinds.indexOf(stage))break;
      const line=el('div','pepette-unified-line'+(stage===kind&&i===extraOctet?' is-active':' is-complete'));
-     if(i===0)line.append(el('span','pepette-line-label',labels[kind]));
+     if(i===0)line.append(el('span','pepette-line-label'+(stage===kind?' is-current-label':''),labels[kind]));
      const row=el('div','pepette-bits');
      weights.forEach((w,j)=>{
       const cell=el('button','pepette-bit'+(extraBits[kind][i][j]?' is-one':''),extraBits[kind][i][j]?'1':'');
