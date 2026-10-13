@@ -6,17 +6,23 @@ const launch=document.getElementById('launch-training');
 if(host&&launch){
  const examples=['10.11.12.13/8','172.16.1.1/16','192.168.1.1/24','10.1.2.3/8','172.16.2.1/16','192.168.0.1/24'];
  const weights=[128,64,32,16,8,4,2,1];
- let example=0,octet=0,bits=Array.from({length:4},()=>Array(8).fill(false)),hint=0,stage='ip',cidrBits=Array(32).fill(false),barPosition=null,barHint=0,barFeedback='',networkBits=Array.from({length:4},()=>Array(8).fill(false)),networkOctet=0,networkHint=0,showCourseHelp=false;
+ let example=0,octet=0,bits=Array.from({length:4},()=>Array(8).fill(false)),hint=0,stage='ip',cidrBits=Array(32).fill(false),barPosition=null,barHint=0,barFeedback='',networkBits=Array.from({length:4},()=>Array(8).fill(false)),networkOctet=0,networkHint=0,extraBits={},extraOctet=0,extraHint=0,reviewChecked=[false,false],showCourseHelp=false;
  const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
  const button=(label,fn)=>{const b=el('button','pepette-action',label);b.type='button';b.addEventListener('click',fn);return b;};
- function start(){octet=0;hint=0;stage='ip';cidrBits=Array(32).fill(false);barPosition=null;barHint=0;barFeedback='';networkBits=Array.from({length:4},()=>Array(8).fill(false));networkOctet=0;networkHint=0;showCourseHelp=false;bits=Array.from({length:4},()=>Array(8).fill(false));host.hidden=false;render();host.scrollIntoView({behavior:'smooth',block:'start'});}
+ function start(){octet=0;hint=0;stage='ip';cidrBits=Array(32).fill(false);barPosition=null;barHint=0;barFeedback='';networkBits=Array.from({length:4},()=>Array(8).fill(false));networkOctet=0;networkHint=0;extraBits={first:Array.from({length:4},()=>Array(8).fill(false)),last:Array.from({length:4},()=>Array(8).fill(false)),broadcast:Array.from({length:4},()=>Array(8).fill(false))};extraOctet=0;extraHint=0;reviewChecked=[false,false];showCourseHelp=false;bits=Array.from({length:4},()=>Array(8).fill(false));host.hidden=false;render();host.scrollIntoView({behavior:'smooth',block:'start'});}
  function render(){
   host.replaceChildren();
   const [ip,cidr]=examples[example].split('/'),octets=ip.split('.').map(Number),expected=binaryOctets(ip);
+  const mask=(0xffffffff<<(32-Number(cidr)))>>>0;
+  const ipNumber=octets.reduce((n,v)=>((n*256)+v)>>>0,0);
+  const networkNumber=(ipNumber&mask)>>>0,broadcastNumber=(networkNumber|(~mask))>>>0;
+  const toOctets=n=>[24,16,8,0].map(shift=>(n>>>shift)&255);
+  const targets={first:toOctets((networkNumber+1)>>>0),last:toOctets((broadcastNumber-1)>>>0),broadcast:toOctets(broadcastNumber)};
+  const kinds=['first','last','broadcast'],labels={first:'1re IP',last:'Dernière IP',broadcast:'Broadcast'};
   const header=el('div','pepette-exercise-header');
   const heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Tableau en binaire - Avec Pépette'),el('p',null,'Adresse : '+ip+'/'+cidr));
-  heading.append(el('p','pepette-progress',stage==='ip'?'Adresse IPv4 - octet '+(octet+1)+' sur 4':stage==='cidr'?'Ligne CIDR - place les bits réseau à 1':stage==='bar'?'Je sépare les bits du réseau et ceux des machines':stage==='network'?'Adresse réseau - octet '+(networkOctet+1)+' sur 4':'Adresse réseau terminée !'));
+  heading.append(el('p','pepette-progress',stage==='ip'?'Adresse IPv4 - octet '+(octet+1)+' sur 4':stage==='cidr'?'Ligne CIDR - place les bits réseau à 1':stage==='bar'?'Je sépare les bits du réseau et ceux des machines':stage==='network'?'Adresse réseau - octet '+(networkOctet+1)+' sur 4':stage==='first'?'Première IP - octet '+(extraOctet+1)+' sur 4':stage==='last'?'Dernière IP - octet '+(extraOctet+1)+' sur 4':stage==='broadcast'?'Broadcast - octet '+(extraOctet+1)+' sur 4':stage==='review'?'Je contrôle mon travail':'Exercice terminé !'));
   const helpToggle=button(showCourseHelp?'Masquer le coup de patte de Pépette':'Revoir le binaire avec Pépette',()=>{showCourseHelp=!showCourseHelp;render();});
   helpToggle.setAttribute('aria-expanded',String(showCourseHelp));
   header.append(heading,helpToggle);
@@ -73,7 +79,7 @@ if(host&&launch){
      cell.setAttribute('aria-label','Bit CIDR '+(k+1));cell.setAttribute('aria-pressed',String(cidrBits[k]));row.append(cell);
     }
     cidrLine.append(row);
-    if(stage==='bar'||stage==='network'||stage==='finished'){
+    if(['bar','network','first','last','broadcast','review','finished'].includes(stage)){
      const chosen=barPosition!==null&&Math.floor((barPosition-1)/8)===i;
      if(chosen){
       const bitIndex=(barPosition-1)%8;
@@ -96,7 +102,7 @@ if(host&&launch){
     }
     part.append(cidrLine);
    }
-   if(stage==='network'||stage==='finished'){
+   if(['network','first','last','broadcast','review','finished'].includes(stage)){
     const networkLine=el('div','pepette-unified-line'+(stage==='network'&&i===networkOctet?' is-active':' is-complete'));
     if(i===0)networkLine.append(el('span','pepette-line-label','Réseau'));
     const networkRow=el('div','pepette-bits');
@@ -117,8 +123,37 @@ if(host&&launch){
      const expectedValue=i<Number(cidr)/8?octets[i]:0;
      const total=weights.reduce((sum,w,j)=>sum+(networkBits[i][j]?w:0),0);
      if(total===expectedValue){
-      const next=button(i===3?'Terminer l’adresse réseau':'Octet suivant',()=>{if(i===3)stage='finished';else networkOctet++;networkHint=0;render();});
+      const next=button(i===3?'Ligne suivante : Première IP':'Octet suivant',()=>{if(i===3){stage='first';extraOctet=0;}else networkOctet++;networkHint=0;render();});
       next.classList.add('pepette-octet-next');part.append(next);
+     }
+    }
+   }
+   if(['first','last','broadcast','review','finished'].includes(stage)){
+    for(const kind of kinds){
+     if(!['review','finished'].includes(stage)&&kinds.indexOf(kind)>kinds.indexOf(stage))break;
+     const line=el('div','pepette-unified-line'+(stage===kind&&i===extraOctet?' is-active':' is-complete'));
+     if(i===0)line.append(el('span','pepette-line-label',labels[kind]));
+     const row=el('div','pepette-bits');
+     weights.forEach((w,j)=>{
+      const cell=el('button','pepette-bit'+(extraBits[kind][i][j]?' is-one':''),extraBits[kind][i][j]?'1':'');
+      cell.type='button';cell.disabled=stage!==kind||i!==extraOctet;
+      cell.setAttribute('aria-label',labels[kind]+', octet '+(i+1)+', poids '+w);
+      cell.setAttribute('aria-pressed',String(extraBits[kind][i][j]));
+      cell.addEventListener('click',()=>{extraBits[kind][i][j]=!extraBits[kind][i][j];render();});
+      row.append(cell);
+     });
+     line.append(row);part.append(line);
+     if(barPosition!==null&&Math.floor((barPosition-1)/8)===i)row.children[(barPosition-1)%8].classList.add('pepette-bar-anchor');
+     if(stage===kind&&i===extraOctet){
+      const value=weights.reduce((n,w,j)=>n+(extraBits[kind][i][j]?w:0),0);
+      if(value===targets[kind][i]){
+       const next=button(i===3?(kind==='first'?'Ligne suivante : Dernière IP':kind==='last'?'Ligne suivante : Broadcast':'Contrôler mon tableau'):'Octet suivant',()=>{
+        if(i<3)extraOctet++;
+        else{stage=kind==='first'?'last':kind==='last'?'broadcast':'review';extraOctet=0;extraHint=0;}
+        render();
+       });
+       next.classList.add('pepette-octet-next');part.append(next);
+      }
      }
     }
    }
@@ -160,21 +195,55 @@ if(host&&launch){
      host.append(el('p','pepette-hint',msg));
     }
    }else if(stage==='network'){
-    const networkTarget=networkOctet<Number(cidr)/8?octets[networkOctet]:0;
-    const sum=weights.reduce((total,w,j)=>total+(networkBits[networkOctet][j]?w:0),0);
-    host.append(el('p','pepette-total','Total de mes bits à 1 : '+sum+' / '+networkTarget));
-    if(sum===networkTarget){
-     host.append(el('p','pepette-success','Bravo ! Cet octet de l’adresse réseau est correct.'));
-    }else{
-     host.append(el('p','pepette-guidance','Garde les bits de l’IPv4 du côté réseau. Du côté machines, laisse les cases vides.'));
+    const target=networkOctet<Number(cidr)/8?octets[networkOctet]:0;
+    const sum=weights.reduce((n,w,j)=>n+(networkBits[networkOctet][j]?w:0),0);
+    host.append(el('p','pepette-total','Total de mes bits à 1 : '+sum+' / '+target));
+    if(sum===target)host.append(el('p','pepette-success','Bravo ! Cet octet est correct.'));
+    else{
+     host.append(el('p','pepette-guidance','Si IPv4 et CIDR ont tous les deux un 1, clique dans la case Réseau. Sinon, laisse 0.'));
      host.append(button('Un indice',()=>{networkHint=Math.min(3,networkHint+1);render();}));
      if(networkHint){
-      const msg=networkHint===1?'La barre CIDR sépare le réseau (à gauche) des machines (à droite).'
-       :networkHint===2?(networkOctet<Number(cidr)/8?'Recopie les 1 de l’adresse IPv4 pour cet octet.':'Cet octet appartient aux machines : aucun 1 à placer.')
-       :'Pour cet octet, le résultat est '+networkTarget+' : '+weights.map((w,j)=>(networkTarget&w)?'1':'0').join('')+'.';
+      const values=weights.filter((w,j)=>bits[networkOctet][j]&&cidrBits[networkOctet*8+j]);
+      const msg=networkHint===1?'Regarde les deux cases au-dessus : IPv4 et CIDR.'
+       :networkHint===2?'Si les deux cases contiennent 1, clique dans la case Réseau juste en dessous. Sinon, ne clique pas.'
+       :'Pour cet octet, clique sous : '+(values.length?values.join(' et '):'aucun nombre, laisse les cases vides')+'.';
       host.append(el('p','pepette-hint',msg));
      }
     }
+   }else if(kinds.includes(stage)){
+    const target=targets[stage][extraOctet],sum=weights.reduce((n,w,j)=>n+(extraBits[stage][extraOctet][j]?w:0),0);
+    const instructions={first:'Recopie les bits du réseau. Dans la partie hôte, laisse des 0, sauf le dernier bit : mets 1.',last:'Recopie les bits du réseau. Dans la partie hôte, mets des 1, sauf le dernier bit : laisse 0.',broadcast:'Recopie les bits du réseau. Dans la partie hôte, mets tous les bits à 1.'};
+    host.append(el('p','pepette-total','Total de mes bits à 1 : '+sum+' / '+target));
+    if(sum===target)host.append(el('p','pepette-success','Bravo ! Cet octet est correct.'));
+    else{
+     host.append(el('p','pepette-guidance',instructions[stage]));
+     host.append(button('Un indice',()=>{extraHint=Math.min(3,extraHint+1);render();}));
+     if(extraHint){
+      const values=weights.filter(w=>(target&w)!==0);
+      host.append(el('p','pepette-hint',extraHint===1?'La barre rouge sépare le réseau et les hôtes.':extraHint===2?instructions[stage]:'Pour cet octet, clique sous : '+(values.length?values.join(' et '):'aucun nombre, laisse les cases vides')+'.'));
+     }
+    }
+   }else if(stage==='review'){
+    host.append(el('p','pepette-success','Les six lignes sont remplies. Vérifie ton tableau avec les deux astuces de Pépette.'));
+    const tips=[
+     ['Astuce n° 1 : Je n’oublie pas les 1 !','Pour la dernière IP adressable, les bits hôtes sont à 1, sauf le dernier à 0. Pour le broadcast, tous les bits hôtes sont à 1.'],
+     ['Astuce n° 2 : Je vérifie les deux derniers bits','Réseau : 00. Première IP : 01. Dernière IP : 10. Broadcast : 11.']
+    ];
+    tips.forEach(([title,detail],i)=>{
+     const card=el('div','pepette-review-tip'),photo=el('img','pepette-review-photo');
+     photo.src='assets/pepette.webp';photo.alt='Pépette';photo.loading='lazy';
+     card.append(photo,el('strong',null,title),el('p',null,detail));
+     const label=el('label','pepette-review-check'),check=el('input');
+     check.type='checkbox';check.checked=reviewChecked[i];check.addEventListener('change',()=>{reviewChecked[i]=check.checked;render();});
+     label.append(check,document.createTextNode(' J’ai vérifié mon tableau avec cette astuce.'));
+     card.append(label);host.append(card);
+    });
+    const validate=button('Valider mon exercice',()=>{stage='finished';render();});
+    validate.disabled=!reviewChecked.every(Boolean);host.append(validate);
+   }else if(stage==='finished'){
+    host.append(el('p','pepette-success','Bravo ! Tu as terminé et vérifié ton tableau en binaire.'));
+    host.append(button('Nouvelle adresse',()=>{example=(example+1)%examples.length;start();}));
+    host.append(button('Revenir aux choix',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
    }else if(stage==='cidr'){
     let drag=null;
     const paint=(start,end,value)=>{
@@ -205,7 +274,7 @@ if(host&&launch){
      if(hint)host.append(el('p','pepette-hint',hint===1?'Le /'+cidr+' indique le nombre de bits réseau à 1.':hint===2?'Commence à gauche, au premier bit, et avance vers la droite.':'Les '+cidr+' premiers bits sont à 1, les autres restent à 0.'));
     }
    }else{
-    host.append(el('p','pepette-success','Bravo ! Tu as terminé l’adresse réseau.'));
+    host.append(el('p','pepette-success','Bravo ! Tu as terminé ton tableau.'));
     host.append(button('Nouvelle adresse',()=>{example=(example+1)%examples.length;start();}));
     host.append(button('Revenir aux choix',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
    }
