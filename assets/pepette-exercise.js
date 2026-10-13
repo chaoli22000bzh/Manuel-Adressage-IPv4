@@ -139,9 +139,41 @@ if(host&&launch){
       cell.type='button';cell.disabled=stage!==kind||i!==extraOctet;
       cell.setAttribute('aria-label',labels[kind]+', octet '+(i+1)+', poids '+w);
       cell.setAttribute('aria-pressed',String(extraBits[kind][i][j]));
-      cell.addEventListener('click',()=>{extraBits[kind][i][j]=!extraBits[kind][i][j];render();});
+      cell.dataset.extraBit=String(j);
+      if(stage===kind&&i===extraOctet)cell.addEventListener('click',()=>{if(cell.dataset.dragHandled==='true')return;extraBits[kind][i][j]=!extraBits[kind][i][j];render();});
       row.append(cell);
      });
+     if(stage===kind&&i===extraOctet){
+      let drag=null;
+      const paint=(start,end,value)=>{
+       for(let j=Math.min(start,end);j<=Math.max(start,end);j++)extraBits[kind][i][j]=value;
+       row.querySelectorAll('[data-extra-bit]').forEach(cell=>{
+        const j=Number(cell.dataset.extraBit),on=extraBits[kind][i][j];
+        cell.classList.toggle('is-one',on);cell.textContent=on?'1':'';
+        cell.setAttribute('aria-pressed',String(on));
+       });
+      };
+      row.addEventListener('pointerdown',e=>{
+       const cell=e.target.closest('[data-extra-bit]');
+       if(!cell||e.button!==0)return;
+       e.preventDefault();
+       const start=Number(cell.dataset.extraBit);
+       drag={id:e.pointerId,start,last:start,value:!extraBits[kind][i][start],original:extraBits[kind][i].slice()};
+       row.setPointerCapture(e.pointerId);
+       paint(start,start,drag.value);
+      });
+      row.addEventListener('pointermove',e=>{
+       if(!drag||e.pointerId!==drag.id)return;
+       const cell=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-extra-bit]');
+       if(!cell||!row.contains(cell))return;
+       const end=Number(cell.dataset.extraBit);
+       if(end===drag.last)return;
+       extraBits[kind][i]=drag.original.slice();
+       drag.last=end;paint(drag.start,end,drag.value);
+      });
+      row.addEventListener('pointerup',e=>{if(drag&&e.pointerId===drag.id){drag=null;render();}});
+      row.addEventListener('pointercancel',e=>{if(drag&&e.pointerId===drag.id){extraBits[kind][i]=drag.original;drag=null;render();}});
+     }
      line.append(row);part.append(line);
      if(barPosition!==null&&Math.floor((barPosition-1)/8)===i)row.children[(barPosition-1)%8].classList.add('pepette-bar-anchor');
      if(stage===kind&&i===extraOctet){
@@ -212,7 +244,7 @@ if(host&&launch){
     }
    }else if(kinds.includes(stage)){
     const target=targets[stage][extraOctet],sum=weights.reduce((n,w,j)=>n+(extraBits[stage][extraOctet][j]?w:0),0);
-    const instructions={first:'Recopie les bits du réseau. Dans la partie hôte, laisse des 0, sauf le dernier bit : mets 1.',last:'Recopie les bits du réseau. Dans la partie hôte, mets des 1, sauf le dernier bit : laisse 0.',broadcast:'Recopie les bits du réseau. Dans la partie hôte, mets tous les bits à 1.'};
+    const instructions={first:'Recopie les bits du réseau. Dans la partie hôte, laisse tous les bits à 0, sauf le dernier bit du quatrième octet : mets-le à 1.',last:'Recopie les bits du réseau. Dans la partie hôte, mets des 1, sauf le dernier bit : laisse 0.',broadcast:'Recopie les bits du réseau. Dans la partie hôte, mets tous les bits à 1.'};
     host.append(el('p','pepette-total','Total de mes bits à 1 : '+sum+' / '+target));
     if(sum===target)host.append(el('p','pepette-success','Bravo ! Cet octet est correct.'));
     else{
