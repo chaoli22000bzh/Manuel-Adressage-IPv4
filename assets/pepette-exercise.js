@@ -19,6 +19,9 @@ if(host&&launch){
   octets.forEach((value,i)=>{
    const part=el('section','pepette-octet'+(i===octet&&!done?' is-active':''));
    part.append(el('strong',null,'Octet '+(i+1)+' : '+value));
+   const powerRow=el('div','pepette-bits');
+   weights.forEach((w,j)=>{const power=el('span','pepette-power');power.append(document.createTextNode('2'));const sup=el('sup',null,String(7-j));power.append(sup);powerRow.append(power);});
+   part.append(powerRow);
    const weightRow=el('div','pepette-bits');
    weights.forEach(w=>weightRow.append(el('span','pepette-weight',String(w))));
    part.append(weightRow);
