@@ -651,7 +651,7 @@ if(host&&launch){
   const actions=el('div','pepette-decimal-actions');
   actions.style.cssText=table.style.cssText+';margin-top:8px';
   host.append(table);
-  if(decimalError)host.append(el('p','pepette-hint',decimalError));
+  if(decimalError&&!complete)host.append(el('p','pepette-hint',decimalError));
   if(!complete){
    const verifyButton=button(decimalLevel===1?'Vérifier mon octet':decimalLevel===2?'Vérifier ma ligne':'Vérifier mon tableau',()=>{
     const check=decimalLevel===1?[decimalStep]:decimalLevel===2?Array.from({length:4},(_,i)=>decimalStep*4+i):Array.from({length:decimalRows.length*4},(_,i)=>i);
@@ -679,5 +679,80 @@ if(host&&launch){
   }
  }
 
- launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);else if(topic==='decimal'&&['1','2','3'].includes(level))decimalStart(Number(level));});
+
+ // Calcul des hôtes, niveau 1 : une égalité qui se construit de gauche à droite.
+ let hostsPrefix=26,hostsStep=0,hostsError='';
+ const hostsPrefixes=[24,25,26,27,28,29];
+ function hostsStart(){
+  hostsPrefix=hostsPrefixes[Math.floor(Math.random()*hostsPrefixes.length)];
+  hostsStep=0;hostsError='';
+  stage='hosts';host.hidden=false;renderHosts();
+  host.scrollIntoView({behavior:'smooth',block:'start'});
+ }
+ function renderHosts(){
+  host.replaceChildren();
+  const exponent=32-hostsPrefix,power=2**exponent,result=power-2;
+  const header=el('div','pepette-exercise-header'),heading=el('div','pepette-exercise-heading');
+  heading.append(el('h3',null,'Calcul du nombre d’hôtes - Avec Pépette'),el('p',null,'Adresse IPv4 : 192.168.10.42/'+hostsPrefix));
+  heading.append(el('p','pepette-step-instruction',hostsStep===4?'Bravo ! Ton calcul est terminé.':'Complète la case dans l’égalité, puis vérifie ta réponse.'));
+  header.append(heading);host.append(header);
+  const formula=el('div','pepette-hosts-formula');
+  formula.style.cssText='display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;font-size:1.45rem;font-weight:600;line-height:2.5;margin:20px 0 12px';
+  formula.append(el('span',null,'Nb hôtes ='));
+  let active=null;
+  const exponentBlock=(parts)=>{
+   const group=el('span');group.style.cssText='display:inline-flex;align-items:flex-start;white-space:nowrap';
+   group.append(el('span',null,'2'));
+   const sup=document.createElement('sup');sup.style.cssText='font-size:.65em;line-height:1.2;position:relative;top:-.2em';
+   for(const part of parts)sup.append(typeof part==='string'?document.createTextNode(part):part);
+   group.append(sup);return group;
+  };
+  const field=(expected)=>{
+   const input=el('input');input.type='text';input.inputMode='numeric';input.autocomplete='off';
+   input.setAttribute('aria-label','Valeur à compléter dans la formule');
+   input.style.cssText='width:58px;max-width:58px;box-sizing:border-box;text-align:center;font:inherit;padding:3px;border:2px solid #f59e0b;border-radius:5px';
+   input.dataset.expected=String(expected);active=input;return input;
+  };
+  // Les termes déjà validés restent visibles, sans répéter les questions.
+  formula.append(exponentBlock(['(32 - ',hostsStep===0?field(hostsPrefix):String(hostsPrefix),')']));
+  formula.append(el('span',null,'- 2 ='));
+  if(hostsStep>=1){
+   formula.append(exponentBlock([hostsStep===1?field(exponent):String(exponent)]));
+   formula.append(el('span',null,'- 2 ='));
+  }
+  if(hostsStep>=2){
+   formula.append(hostsStep===2?field(power):el('span',null,String(power)));
+   formula.append(el('span',null,'- 2 ='));
+  }
+  if(hostsStep>=3)formula.append(hostsStep===3?field(result):el('span',null,String(result)));
+  host.append(formula);
+  if(hostsError)host.append(el('p','pepette-hint',hostsError));
+  if(hostsStep<4){
+   const verify=button('Vérifier',()=>{
+    if(active.value.trim()===active.dataset.expected){
+     hostsStep++;hostsError='';renderHosts();
+     host.querySelector('.pepette-hosts-formula input')?.focus({preventScroll:true});
+    }else{hostsError='Ce n’est pas la bonne valeur. Essaie encore.';active.focus();active.select();
+     const existing=host.querySelector('.pepette-hosts-error');
+     if(existing)existing.textContent=hostsError;
+     else{const msg=el('p','pepette-hint pepette-hosts-error',hostsError);formula.after(msg);}
+    }
+   });
+   active.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();verify.click();}});
+   host.append(verify);
+  }else{
+   host.append(el('p','pepette-success','Bravo ! Tu as trouvé '+result+' hôtes utilisables.'));
+   host.append(button('Nouvelle adresse',hostsStart));
+   host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+  }
+  const aid=el('div','pepette-exponents');aid.style.marginTop='20px';
+  const helpButton=button('Voir le coup de patte de Pépette sur les exposants',()=>{panel.hidden=!panel.hidden;helpButton.textContent=panel.hidden?'Voir le coup de patte de Pépette sur les exposants':'Refermer le coup de patte';helpButton.setAttribute('aria-expanded',String(!panel.hidden));});
+  helpButton.setAttribute('aria-expanded','false');aid.append(helpButton);
+  const panel=el('div');panel.hidden=true;
+  const original=document.getElementById('pepette-powers-panel');
+  if(original)for(const child of original.children)panel.append(child.cloneNode(true));
+  aid.append(panel);host.append(aid);
+ }
+
+ launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);else if(topic==='decimal'&&['1','2','3'].includes(level))decimalStart(Number(level));else if(topic==='hotes'&&level==='1')hostsStart();});
 }
