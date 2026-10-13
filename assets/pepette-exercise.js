@@ -12,6 +12,7 @@ if(host&&launch){
  function start(){octet=0;hint=0;stage='ip';cidrBits=Array(32).fill(false);barPosition=null;barHint=0;barFeedback='';networkBits=Array.from({length:4},()=>Array(8).fill(false));networkOctet=0;networkHint=0;extraBits={first:Array.from({length:4},()=>Array(8).fill(false)),last:Array.from({length:4},()=>Array(8).fill(false)),broadcast:Array.from({length:4},()=>Array(8).fill(false))};extraOctet=0;extraHint=0;reviewShown=[false,false];showCourseHelp=false;bits=Array.from({length:4},()=>Array(8).fill(false));host.hidden=false;render();host.scrollIntoView({behavior:'smooth',block:'start'});}
  function render(){
   host.replaceChildren();
+  completeRestore();
   const [ip,cidr]=examples[example].split('/'),octets=ip.split('.').map(Number),expected=binaryOctets(ip);
   const mask=(0xffffffff<<(32-Number(cidr)))>>>0;
   const ipNumber=octets.reduce((n,v)=>((n*256)+v)>>>0,0);
@@ -286,8 +287,9 @@ if(host&&launch){
     host.append(button('Valider mon exercice',()=>{stage='finished';render();}));
    }else if(stage==='finished'){
     host.append(el('p','pepette-success','Bravo ! Tu as terminé et vérifié ton tableau en binaire.'));
-    host.append(button('Nouvelle adresse',()=>{example=(example+1)%examples.length;start();}));
-    host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+    if(completeMode)host.append(button('Continuer vers le tableau décimal',completeToDecimal));
+    else host.append(button('Nouvelle adresse',()=>{example=(example+1)%examples.length;start();}));
+    if(!completeMode)host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
    }else if(stage==='cidr'){
     let drag=null;
     const paint=(start,end,value)=>{
@@ -573,6 +575,7 @@ if(host&&launch){
  }
  function renderDecimal(){
   host.replaceChildren();
+  completeRestore();
   const expected=decimalExpected(),prefix=Number(decimalAddress.split('/')[1]);
   const total=decimalRows.length*4,step=Math.min(decimalStep,total-1),activeRow=decimalRows[Math.floor(step/4)],activeOctet=step%4;
   const complete=decimalLevel===1?decimalStep>=total:decimalLevel===2?decimalStep>=decimalRows.length:decimalLocked;
@@ -674,8 +677,11 @@ if(host&&launch){
    else host.append(verifyButton);
   }else{
    host.append(el('p',decimalLocked&&decimalError?'pepette-hint':'pepette-success',decimalLocked?decimalError:'Bravo ! Tu as terminé le tableau.'));
-   host.append(button('Nouvelle adresse',()=>decimalStart(decimalLevel)));
-   host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   if(completeMode)host.append(button('Continuer vers le calcul du nombre d’hôtes',completeToHosts));
+   else{
+    host.append(button('Nouvelle adresse',()=>decimalStart(decimalLevel)));
+    host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   }
   }
  }
 
@@ -691,6 +697,7 @@ if(host&&launch){
  }
  function renderHosts(){
   host.replaceChildren();
+  completeRestore();
   const exponent=32-hostsPrefix,power=2**exponent,result=power-2;
   const header=el('div','pepette-exercise-header'),heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Calcul du nombre d’hôtes - Avec Pépette'),el('p',null,'Adresse IPv4 : 192.168.10.42/'+hostsPrefix));
@@ -745,8 +752,13 @@ if(host&&launch){
   }else{
    work.append(el('p','pepette-success','Bravo ! Tu as trouvé '+result+' hôtes utilisables.'));
    work.append(el('p',null,'Tu peux donc attribuer une adresse IP à '+result+' équipements sur ce réseau, par exemple des ordinateurs, des serveurs, des imprimantes ou du matériel réseau.'));
-   work.append(button('Nouvelle adresse',hostsStart));
-   work.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   if(completeMode){
+    work.append(button('Nouvel exercice complet',completeStart));
+    work.append(button('Nouveau test',completeEnd));
+   }else{
+    work.append(button('Nouvelle adresse',hostsStart));
+    work.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   }
   }
   const aid=el('aside','pepette-hosts-aid');aid.style.cssText='flex:0 1 340px;max-width:100%;min-width:280px;margin-top:10px';
   const helpButton=button('Voir le coup de patte',()=>{panel.hidden=!panel.hidden;helpButton.textContent=panel.hidden?'Voir le coup de patte':'Refermer le coup de patte';helpButton.setAttribute('aria-expanded',String(!panel.hidden));});
@@ -901,116 +913,53 @@ if(host&&launch){
  }
 
 
- // Exercice complet guidé : une seule adresse conservée pour les trois parties.
- const completeRows=['cidr','network','first','last','broadcast'];
- const completeNames={cidr:'Masque de sous-réseau',network:'Réseau',first:'1re IP',last:'Dernière IP',broadcast:'Broadcast'};
- let completeAddress='',completePhase=0,completePosition=0,completeValues={},completeFeedback='',completeHostStep=0;
- function completeStart(){
-  const prefixes=[24,25,26,27,28,29];
-  const prefix=prefixes[Math.floor(Math.random()*prefixes.length)];
-  const ip=[192,168,1+Math.floor(Math.random()*200),1+Math.floor(Math.random()*200)].join('.');
-  completeAddress=ip+'/'+prefix;completePhase=0;completePosition=0;completeHostStep=0;completeFeedback='';
-  completeValues={binary:Array.from({length:4},()=>''),...Object.fromEntries(completeRows.map(k=>[k,Array(4).fill('')]))};
-  host.hidden=false;renderComplete();host.scrollIntoView({behavior:'smooth',block:'start'});
+ // Exercice complet : orchestration des trois interfaces originales, sans duplication.
+ let completeMode=false,completeSnapshots=[];
+ function completeRestore(){
+  if(!completeMode||!completeSnapshots.length)return;
+  const fragment=document.createDocumentFragment();
+  for(const snapshot of completeSnapshots)fragment.append(snapshot.cloneNode(true));
+  host.prepend(fragment);
  }
- function renderComplete(){
-  host.replaceChildren();
-  const [ip,p]=completeAddress.split('/'),prefix=Number(p),octets=ip.split('.').map(Number);
-  const mask=(0xffffffff<<(32-prefix))>>>0;
-  const number=octets.reduce((n,v)=>((n*256)+v)>>>0,0);
-  const net=(number&mask)>>>0,broad=(net|(~mask))>>>0;
-  const oct=n=>[24,16,8,0].map(shift=>(n>>>shift)&255);
-  const expected={cidr:oct(mask),network:oct(net),first:oct((net+1)>>>0),last:oct((broad-1)>>>0),broadcast:oct(broad)};
-  const count=2**(32-prefix)-2;
-  const heading=el('div','pepette-exercise-heading');
-  heading.append(el('h3',null,'Exercice complet - Avec Pépette'),el('p',null,'Adresse IPv4 : '+completeAddress));
-  heading.append(el('p','pepette-progress',completePhase===0?'Étape 1 sur 3 : tableau binaire':completePhase===1?'Étape 2 sur 3 : tableau décimal':'Étape 3 sur 3 : nombre d’hôtes'));
-  host.append(heading);
-  const feedback=el('div','pepette-hosts-medium-feedback');
-  const input=(label,width)=>{
-   const n=el('input');n.type='text';n.inputMode='numeric';n.autocomplete='off';n.placeholder='?';
-   n.setAttribute('aria-label',label);n.style.cssText='width:'+width+'px;box-sizing:border-box;text-align:center;font:inherit;padding:5px;border:2px solid #9ca3af;border-radius:5px';return n;
-  };
-  if(completePhase===0){
-   const row=el('div');row.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:18px 0';
-   const idx=completePosition;
-   host.append(el('p',null,'Convertis en binaire l’octet '+(idx+1)+' : '+octets[idx]+'. Écris les 8 bits.'));
-   const field=input('Octet '+(idx+1)+' en binaire',145);field.maxLength=8;field.value=completeValues.binary[idx];
-   row.append(field);host.append(row,feedback);
-   host.append(button('Vérifier mon octet',()=>{
-    completeValues.binary[idx]=field.value.trim();
-    if(completeValues.binary[idx]===octets[idx].toString(2).padStart(8,'0')){
-     completePosition++;completeFeedback='';
-     if(completePosition===4){completePhase=1;completePosition=0;}
-     renderComplete();
-    }else{feedback.replaceChildren(el('p','pepette-hint','Regarde les poids 128, 64, 32, 16, 8, 4, 2 et 1. Corrige cet octet.'));}
-   }));
-   const summary=el('p',null,'Octets déjà validés : '+completeValues.binary.slice(0,idx).join(' . '));host.append(summary);
-  }else if(completePhase===1){
-   const idx=completePosition,rowIndex=Math.floor(idx/4),octIndex=idx%4,key=completeRows[rowIndex];
-   host.append(el('p',null,'Complète '+completeNames[key]+' : octet '+(octIndex+1)+' sur 4.'));
-   const table=el('table','pepette-decimal-table');
-   const header=el('tr');header.append(el('th',null,'Adresse'),...Array.from({length:4},(_,i)=>el('th',null,'Octet '+(i+1))));
-   table.append(header);
-   const ipRow=el('tr');ipRow.append(el('th',null,'IPv4'),...octets.map(n=>el('td',null,String(n))));table.append(ipRow);
-   let active=null;
-   completeRows.forEach((kind,r)=>{
-    const tr=el('tr');tr.append(el('th',null,completeNames[kind]));
-    for(let j=0;j<4;j++){
-     const td=el('td'),pos=r*4+j;
-     if(pos===idx){active=input(completeNames[kind]+' octet '+(j+1),64);active.value=completeValues[kind][j];td.append(active);}
-     else td.textContent=pos<idx?completeValues[kind][j]:'';
-     tr.append(td);
-    }
-    table.append(tr);
+ function completeSaveAndContinue(next){
+  const snapshot=el('section','pepette-complete-finished');
+  snapshot.style.cssText='margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #cbd5e1';
+  for(const child of Array.from(host.children).slice(completeSnapshots.length)){
+   const copy=child.cloneNode(true);
+   copy.querySelectorAll('button,input,select').forEach(control=>{
+    if(control.tagName==='BUTTON')control.remove();
+    else {const value=el('span',null,control.value||'');control.replaceWith(value);}
    });
-   host.append(table,feedback);
-   const verify=button('Vérifier mon octet',()=>{
-    const value=active.value.trim();
-    completeValues[key][octIndex]=value;
-    if(value!==''&&Number(value)===expected[key][octIndex]){
-     completePosition++;if(completePosition===20){completePhase=2;completePosition=0;}renderComplete();
-    }else feedback.replaceChildren(el('p','pepette-hint','Cet octet n’est pas correct. Vérifie ton calcul et essaie encore.'));
-   });
-   host.append(verify);active?.focus({preventScroll:true});
-  }else{
-   host.append(el('p',null,'Complète progressivement la formule pour calculer les hôtes utilisables.'));
-   const line=el('div');line.style.cssText='display:flex;align-items:baseline;flex-wrap:wrap;gap:9px;font-size:1.4rem;margin:18px 0';
-   line.append(el('span',null,'Nb hôtes ='));
-   const power=(value)=>{
-    const wrap=el('span');wrap.append('2');
-    const sup=document.createElement('sup');sup.style.fontSize='.7em';sup.append(value);wrap.append(sup);return wrap;
-   };
-   const terms=[prefix,32-prefix,2**(32-prefix),count];
-   let field=null;
-   line.append(power(completeHostStep===0?(field=input('CIDR',60)):'(32 - '+prefix+')'));
-   line.append(el('span',null,'− 2 ='));
-   if(completeHostStep>=1){
-    line.append(power(completeHostStep===1?(field=input('Nombre de bits hôtes',60)):String(32-prefix)));
-    line.append(el('span',null,'− 2 ='));
-   }
-   if(completeHostStep>=2){
-    if(completeHostStep===2)field=input('Puissance de 2',85);
-    line.append(field&&completeHostStep===2?field:el('span',null,String(2**(32-prefix))));
-    line.append(el('span',null,'− 2 ='));
-   }
-   if(completeHostStep>=3){
-    if(completeHostStep===3)field=input('Nombre d’hôtes',85);
-    line.append(field&&completeHostStep===3?field:el('span',null,String(count)));
-   }
-   host.append(line,feedback);
-   if(completeHostStep<4){
-    host.append(button('Vérifier',()=>{
-     if(field.value.trim()===String(terms[completeHostStep])){completeHostStep++;renderComplete();}
-     else feedback.replaceChildren(el('p','pepette-hint','Vérifie cette étape du calcul, puis essaie encore.'));
-    }));
-   }else{
-    host.append(el('p','pepette-success','Bravo ! Tu as terminé l’exercice complet et trouvé '+count+' hôtes utilisables.'));
-    host.append(el('p',null,'Tu peux donc attribuer une adresse IP à '+count+' équipements sur ce réseau, par exemple des ordinateurs, des serveurs, des imprimantes ou du matériel réseau.'));
-    host.append(button('Nouvelle adresse',completeStart));
-    host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
-   }
+   snapshot.append(copy);
   }
+  completeSnapshots.push(snapshot);
+  next();
+ }
+ function completeStart(){
+  completeMode=true;completeSnapshots=[];
+  // CIDR /24 : les quatre étapes du calcul guidé restent accessibles.
+  example=[2,5][Math.floor(Math.random()*2)];
+  start();
+ }
+ function completeToDecimal(){
+  const address=examples[example];
+  completeSaveAndContinue(()=>{
+   decimalStart(1);
+   decimalAddress=address;
+   decimalValues=Object.fromEntries(decimalRows.map(k=>[k,Array(4).fill('')]));
+   decimalStep=0;decimalError='';renderDecimal();
+  });
+ }
+ function completeToHosts(){
+  completeSaveAndContinue(()=>{
+   hostsStart();
+   hostsPrefix=Number(examples[example].split('/')[1]);
+   hostsStep=0;hostsError='';renderHosts();
+  });
+ }
+ function completeEnd(){
+  completeMode=false;completeSnapshots=[];
+  host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});
  }
 
  launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);else if(topic==='decimal'&&['1','2','3'].includes(level))decimalStart(Number(level));else if(topic==='hotes'&&level==='1')hostsStart();else if(topic==='hotes'&&level==='2')hostsMediumStart();else if(topic==='hotes'&&level==='3')hostsExpertStart();else if(topic==='complet'&&level==='1')completeStart();});
