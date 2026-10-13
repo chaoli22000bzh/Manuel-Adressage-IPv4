@@ -281,3 +281,13 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .pepette-unified-octet{padding-bottom:3px}
 .pepette-unified-line .pepette-line-label{left:-79px}
 @media(max-width:650px){.pepette-unified-line .pepette-line-label{left:-63px}}
+
+/* V0.3.55 - Autocontrole final avec les deux astuces du cours. */
+.pepette-review-tip{position:relative;margin:12px 0;padding:12px 14px 12px 84px;border:1px solid #94a3b8;border-radius:10px;min-height:78px}
+.pepette-review-tip strong{display:block;margin-bottom:6px}
+.pepette-review-tip p{margin:4px 0 10px;line-height:1.45}
+.pepette-review-photo{position:absolute;left:12px;top:12px;width:56px;height:56px;object-fit:cover;border-radius:10px}
+.pepette-review-check{display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer}
+.pepette-review-check input{width:18px;height:18px;accent-color:#2563eb}
+.pepette-action:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:650px){.pepette-review-tip{padding-left:12px;padding-top:76px}.pepette-review-photo{top:10px}}
