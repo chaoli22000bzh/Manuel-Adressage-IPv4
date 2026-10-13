@@ -22,7 +22,22 @@ if(host&&launch){
   const header=el('div','pepette-exercise-header');
   const heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Tableau en binaire - Avec Pépette'),el('p',null,'Adresse : '+ip+'/'+cidr));
-  heading.append(el('p','pepette-progress',stage==='ip'?'Adresse IPv4 - octet '+(octet+1)+' sur 4':stage==='cidr'?'Ligne CIDR - place les bits réseau à 1':stage==='bar'?'Je sépare les bits du réseau et ceux des machines':stage==='network'?'Adresse réseau - octet '+(networkOctet+1)+' sur 4':stage==='first'?'Première IP - octet '+(extraOctet+1)+' sur 4':stage==='last'?'Dernière IP - octet '+(extraOctet+1)+' sur 4':stage==='broadcast'?'Broadcast - octet '+(extraOctet+1)+' sur 4':stage==='review'?'Je contrôle mon travail':'Exercice terminé !'));
+  heading.append(el('p','pepette-progress',stage==='ip'?'Adresse IPv4 - octet '+(octet+1)+' sur 4':stage==='cidr'?'Ligne CIDR /'+cidr:stage==='bar'?'Je sépare les bits du réseau et ceux des machines':stage==='network'?'Adresse réseau - octet '+(networkOctet+1)+' sur 4':stage==='first'?'Première IP - octet '+(extraOctet+1)+' sur 4':stage==='last'?'Dernière IP - octet '+(extraOctet+1)+' sur 4':stage==='broadcast'?'Broadcast - octet '+(extraOctet+1)+' sur 4':stage==='review'?'Je contrôle mon travail':'Exercice terminé !'));
+  // Consigne stable, visible avant le tableau a chaque octet.
+  const instructions={
+   ip:['Complète la ligne IPv4.','Transforme l’octet '+(octet+1)+' ('+octets[octet]+') en binaire.'],
+   cidr:['Complète la ligne CIDR /'+cidr+'.','Place les '+cidr+' premiers bits à 1, en partant de la gauche.'],
+   bar:['Place la barre CIDR.','Clique juste après le dernier 1 de la ligne CIDR.'],
+   network:['Complète la ligne Réseau.','Compare IPv4 et CIDR : si les deux bits sont à 1, clique dans la case Réseau en dessous. Sinon, laisse 0.'],
+   first:['Complète la ligne Première IP adressable.','Garde les bits du réseau. Dans la partie hôte, laisse des 0, sauf le dernier bit du quatrième octet : mets 1.'],
+   last:['Complète la ligne Dernière IP adressable.','Garde les bits du réseau. Dans la partie hôte, mets des 1, sauf le dernier bit du quatrième octet : laisse 0.'],
+   broadcast:['Complète la ligne Broadcast.','Garde les bits du réseau. Dans la partie hôte, mets tous les bits à 1.'],
+   review:['Vérifie ton tableau.','Utilise les deux astuces de Pépette avant de valider.'],
+   finished:['Exercice terminé !','']
+  };
+  const instruction=el('div','pepette-step-instruction');
+  instruction.append(el('strong',null,instructions[stage][0]),el('p',null,instructions[stage][1]));
+  heading.append(instruction);
   const helpToggle=button(showCourseHelp?'Masquer le coup de patte de Pépette':'Revoir le binaire avec Pépette',()=>{showCourseHelp=!showCourseHelp;render();});
   helpToggle.setAttribute('aria-expanded',String(showCourseHelp));
   header.append(heading,helpToggle);
@@ -206,10 +221,6 @@ if(host&&launch){
   if(stage!=='ip'){
    const cidrTable=table;
    if(stage==='bar'){
-    const guidance=el('div','pepette-bar-guidance');
-    guidance.append(el('p',null,'Place la barre CIDR.'));
-    guidance.append(el('p',null,'Clique après le dernier 1 bleu.'));
-    host.append(guidance);
     if(barPosition!==null)host.append(el('p','pepette-total','Barre placée après le bit '+barPosition+'.'));
     host.append(button('Vérifier la barre',()=>{
      if(barPosition===Number(cidr)){stage='network';networkOctet=0;networkHint=0;barFeedback='';}
@@ -229,10 +240,8 @@ if(host&&launch){
    }else if(stage==='network'){
     const target=networkOctet<Number(cidr)/8?octets[networkOctet]:0;
     const sum=weights.reduce((n,w,j)=>n+(networkBits[networkOctet][j]?w:0),0);
-    host.append(el('p','pepette-total','Total de mes bits à 1 : '+sum+' / '+target));
     if(sum===target)host.append(el('p','pepette-success','Bravo ! Cet octet est correct.'));
     else{
-     host.append(el('p','pepette-guidance','Si IPv4 et CIDR ont tous les deux un 1, clique dans la case Réseau. Sinon, laisse 0.'));
      host.append(button('Un indice',()=>{networkHint=Math.min(3,networkHint+1);render();}));
      if(networkHint){
       const values=weights.filter((w,j)=>bits[networkOctet][j]&&cidrBits[networkOctet*8+j]);
@@ -245,10 +254,8 @@ if(host&&launch){
    }else if(kinds.includes(stage)){
     const target=targets[stage][extraOctet],sum=weights.reduce((n,w,j)=>n+(extraBits[stage][extraOctet][j]?w:0),0);
     const instructions={first:'Recopie les bits du réseau. Dans la partie hôte, laisse tous les bits à 0, sauf le dernier bit du quatrième octet : mets-le à 1.',last:'Recopie les bits du réseau. Dans la partie hôte, mets des 1, sauf le dernier bit : laisse 0.',broadcast:'Recopie les bits du réseau. Dans la partie hôte, mets tous les bits à 1.'};
-    host.append(el('p','pepette-total','Total de mes bits à 1 : '+sum+' / '+target));
     if(sum===target)host.append(el('p','pepette-success','Bravo ! Cet octet est correct.'));
     else{
-     host.append(el('p','pepette-guidance',instructions[stage]));
      host.append(button('Un indice',()=>{extraHint=Math.min(3,extraHint+1);render();}));
      if(extraHint){
       const values=weights.filter(w=>(target&w)!==0);
@@ -301,8 +308,7 @@ if(host&&launch){
     host.append(el('p','pepette-total','Bits réseau à 1 : '+count+' / '+cidr));
     if(correct){host.append(el('p','pepette-success','Bravo ! Tu as placé les '+cidr+' bits réseau.'));host.append(button('Placer la barre CIDR',()=>{stage='bar';barPosition=null;barHint=0;barFeedback='';render();}));}
     else{
-     host.append(el('p','pepette-guidance','Clique sur les cases ou maintiens le clic et glisse pour remplir plusieurs bits. Un second clic retire un 1.'));
-     host.append(button('Un indice',()=>{hint=Math.min(hint+1,3);render();}));
+      host.append(button('Un indice',()=>{hint=Math.min(hint+1,3);render();}));
      if(hint)host.append(el('p','pepette-hint',hint===1?'Le /'+cidr+' indique le nombre de bits réseau à 1.':hint===2?'Commence à gauche, au premier bit, et avance vers la droite.':'Les '+cidr+' premiers bits sont à 1, les autres restent à 0.'));
     }
    }else{
@@ -319,7 +325,6 @@ if(host&&launch){
    host.append(el('p','pepette-success','Bravo ! Tu as trouvé '+octets[octet]+'.'));
 
   }else{
-   host.append(el('p','pepette-guidance','Clique sur les cases pour placer les 1. Les cases vides valent 0.'));
    host.append(button('Un indice',()=>{hint=Math.min(hint+1,3);render();}));
    if(hint){
     const target=octets[octet];
