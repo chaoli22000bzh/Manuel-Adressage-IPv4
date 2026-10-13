@@ -621,7 +621,9 @@ if(host&&launch){
    }
    reference.append(part);
   }
-  reference.style.marginBottom='24px';host.append(reference);
+  // Le tableau binaire validé reste visible au-dessus dans l'exercice complet.
+  // Ne pas répéter le tableau de référence à l'étape décimale.
+  if(!completeMode){reference.style.marginBottom='24px';host.append(reference);}
   const title=el('h4',null,'Tableau en décimal');title.style.margin='0 0 4px';host.append(title);
   const table=el('div','pepette-decimal-table');
   table.style.cssText='display:grid;grid-template-columns:minmax(90px,1.5fr) repeat(4,minmax(52px,1fr))'+(decimalLevel===2?' minmax(125px,auto)':'')+';column-gap:6px;row-gap:6px;align-items:center;max-width:'+(decimalLevel===2?'980px':'780px');
@@ -704,7 +706,7 @@ if(host&&launch){
   heading.append(el('p','pepette-step-instruction',hostsStep===4?'Bravo ! Ton calcul est terminé.':'Complète la case dans l’égalité, puis vérifie ta réponse.'));
   header.append(heading);host.append(header);
   const layout=el('div','pepette-hosts-layout');layout.style.cssText='display:flex;align-items:flex-start;flex-wrap:wrap;gap:24px;margin-top:12px';host.append(layout);
-  const work=el('div','pepette-hosts-work');work.style.cssText='flex:1 1 480px;min-width:0';layout.append(work);
+  const work=el('div','pepette-hosts-work');work.style.cssText='flex:1 1 380px;min-width:0';layout.append(work);
   const formula=el('div','pepette-hosts-formula');
   formula.style.cssText='display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;font-size:1.45rem;font-weight:600;line-height:2.5;margin:20px 0 12px';
   formula.append(el('span',null,'Nb hôtes ='));
@@ -760,7 +762,7 @@ if(host&&launch){
     work.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
    }
   }
-  const aid=el('aside','pepette-hosts-aid');aid.style.cssText='flex:0 1 340px;max-width:100%;min-width:280px;margin-top:10px';
+  const aid=el('aside','pepette-hosts-aid');aid.style.cssText='flex:0 0 340px;width:340px;max-width:100%;min-width:0;margin-top:10px;box-sizing:border-box';
   const helpButton=button('Voir le coup de patte',()=>{panel.hidden=!panel.hidden;helpButton.textContent=panel.hidden?'Voir le coup de patte':'Refermer le coup de patte';helpButton.setAttribute('aria-expanded',String(!panel.hidden));});
   helpButton.setAttribute('aria-expanded','false');aid.append(helpButton);
   const panel=el('div');panel.hidden=true;
@@ -926,9 +928,20 @@ if(host&&launch){
   snapshot.style.cssText='margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #cbd5e1';
   for(const child of Array.from(host.children).slice(completeSnapshots.length)){
    const copy=child.cloneNode(true);
-   copy.querySelectorAll('button,input,select').forEach(control=>{
-    if(control.tagName==='BUTTON')control.remove();
-    else {const value=el('span',null,control.value||'');control.replaceWith(value);}
+   // Les boutons de bits FONT partie du tableau : ne jamais les supprimer.
+   // Seuls les boutons d'action/navigation disparaissent.
+   copy.querySelectorAll('button').forEach(control=>{
+    if(control.classList.contains('pepette-bit')||control.classList.contains('pepette-cidr-bit')){
+     control.disabled=true;control.tabIndex=-1;
+     control.style.pointerEvents='none';
+    }else control.remove();
+   });
+   copy.querySelectorAll('input,select').forEach(control=>{
+    const value=el('span',null,control.value||'');
+    value.style.cssText=control.getAttribute('style')||'';
+    value.style.display='inline-flex';value.style.alignItems='center';value.style.justifyContent='center';
+    value.style.background='#f8fafc';value.style.minHeight='34px';
+    control.replaceWith(value);
    });
    snapshot.append(copy);
   }
