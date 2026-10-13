@@ -384,7 +384,7 @@ if(host&&launch){
   heading.append(el('h3',null,'Tableau en binaire - Je relève le défi'),el('p',null,'Adresse : '+challengeAddress));
   const instruction=el('div','pepette-step-instruction');
   instruction.append(el('strong',null,challengeLocked?'Correction de ton tableau.':'Complète les six lignes du tableau.'));
-  instruction.append(el('p',null,challengeLocked?'Tes réponses sont figées. Les cases incorrectes sont indiquées en rouge.':'Tu peux travailler dans l’ordre que tu veux. Une case vide représente un bit à 0.'));
+  instruction.append(el('p',null,challengeLocked?'Tes réponses sont figées. Les erreurs sont indiquées en rouge.':'Tu peux travailler dans l’ordre que tu veux. Une case vide représente un bit à 0.'));
   instruction.append(el('p',null,challengeLocked?'':'Place aussi la barre CIDR. Vérifie tout ton travail à la fin.'));
   heading.append(instruction);header.append(heading);host.append(header);
   const table=el('div','pepette-octets pepette-unified-grid pepette-challenge-grid');
@@ -403,7 +403,7 @@ if(host&&launch){
      cell.type='button';cell.disabled=challengeLocked;
      cell.setAttribute('aria-label',challengeNames[kind]+', octet '+(i+1)+', bit '+(j+1)+', '+(on?'1':'0'));
      cell.setAttribute('aria-pressed',String(on));
-     if(challengeLocked&&on!==correct){cell.classList.add('challenge-error');cell.title='Attendu : '+(correct?'1':'0');cell.textContent=on?'1':'0';cell.setAttribute('aria-label',challengeNames[kind]+', bit '+(index+1)+', réponse '+(on?'1':'0')+', attendu '+(correct?'1':'0'));}
+     if(challengeLocked&&on!==correct){cell.classList.add('challenge-error');cell.textContent=on?'1':'0';cell.setAttribute('aria-label',challengeNames[kind]+', bit '+(index+1)+', réponse '+(on?'1':'0')+', attendu '+(correct?'1':'0'));}
      if(challengeLocked&&on===correct)cell.classList.add('challenge-correct');
      cell.dataset.challengeRow=kind;cell.dataset.challengeIndex=String(index);
      if(!challengeLocked)cell.addEventListener('click',e=>{if(e.detail!==0)return;challengeBits[kind][index]=!challengeBits[kind][index];renderChallenge();});
@@ -416,46 +416,52 @@ if(host&&launch){
   }
   host.append(table);
   if(!challengeLocked){
-   // Un geste continu sur les 32 bits d'une seule ligne, meme entre octets.
+   // Peinture au passage : horizontal entre octets et vertical entre lignes.
    let drag=null;
    const cellAt=(x,y)=>document.elementFromPoint(x,y)?.closest('[data-challenge-row][data-challenge-index]');
-   const paint=(to)=>{
-    if(!drag)return;
-    challengeBits[drag.kind]=drag.original.slice();
-    for(let n=Math.min(drag.start,to);n<=Math.max(drag.start,to);n++)challengeBits[drag.kind][n]=drag.value;
-    table.querySelectorAll('[data-challenge-row]').forEach(cell=>{
-     if(cell.dataset.challengeRow!==drag.kind)return;
-     const on=challengeBits[drag.kind][Number(cell.dataset.challengeIndex)];
-     cell.classList.toggle('is-one',on);cell.textContent=on?'1':'';
-     cell.setAttribute('aria-pressed',String(on));
-    });
+   const mark=(cell)=>{
+    if(!drag||!cell||!table.contains(cell))return;
+    const kind=cell.dataset.challengeRow,index=Number(cell.dataset.challengeIndex);
+    if(!challengeRows.includes(kind)||!Number.isInteger(index)||index<0||index>31)return;
+    const key=kind+':'+index;
+    if(drag.visited.has(key))return;
+    drag.visited.add(key);
+    challengeBits[kind][index]=drag.value;
+    cell.classList.toggle('is-one',drag.value);
+    cell.textContent=drag.value?'1':'';
+    cell.setAttribute('aria-pressed',String(drag.value));
+   };
+   const trace=(x1,y1,x2,y2)=>{
+    const steps=Math.max(1,Math.ceil(Math.hypot(x2-x1,y2-y1)/5));
+    for(let n=0;n<=steps;n++){
+     const t=n/steps;
+     mark(cellAt(x1+(x2-x1)*t,y1+(y2-y1)*t));
+    }
    };
    table.addEventListener('pointerdown',e=>{
     const cell=e.target.closest('[data-challenge-row][data-challenge-index]');
     if(!cell||e.button!==0)return;
     e.preventDefault();
     const kind=cell.dataset.challengeRow,index=Number(cell.dataset.challengeIndex);
-    drag={id:e.pointerId,kind,start:index,last:index,value:!challengeBits[kind][index],original:challengeBits[kind].slice()};
+    drag={id:e.pointerId,value:!challengeBits[kind][index],visited:new Set(),x:e.clientX,y:e.clientY};
     table.setPointerCapture(e.pointerId);
-    paint(index);
+    mark(cell);
    });
    table.addEventListener('pointermove',e=>{
     if(!drag||e.pointerId!==drag.id)return;
-    const cell=cellAt(e.clientX,e.clientY);
-    if(!cell||cell.dataset.challengeRow!==drag.kind)return;
-    const index=Number(cell.dataset.challengeIndex);
-    if(index===drag.last)return;
-    drag.last=index;paint(index);
+    trace(drag.x,drag.y,e.clientX,e.clientY);
+    drag.x=e.clientX;drag.y=e.clientY;
    });
    table.addEventListener('pointerup',e=>{
     if(!drag||e.pointerId!==drag.id)return;
+    trace(drag.x,drag.y,e.clientX,e.clientY);
     drag=null;renderChallenge();
    });
    table.addEventListener('pointercancel',e=>{
     if(!drag||e.pointerId!==drag.id)return;
-    challengeBits[drag.kind]=drag.original;drag=null;renderChallenge();
+    drag=null;renderChallenge();
    });
-
+  }
    const bar=el('div','pepette-challenge-bar');
    bar.append(el('strong',null,'Barre CIDR : '+(challengeBar===null?'non placée':'après le bit '+challengeBar)));
    bar.append(el('p',null,'Place la barre CIDR : clique sur le numéro du bit situé juste à gauche de la barre.'));
@@ -478,7 +484,7 @@ if(host&&launch){
   }else{
    const message=challengeResult.errors===0&&challengeResult.barCorrect?'Bravo ! Ton tableau est entièrement correct.':'Résultat : '+challengeResult.errors+' bit(s) incorrect(s). '+(challengeResult.barCorrect?'Barre CIDR correcte.':'Barre CIDR incorrecte : position attendue '+prefix+'.');
    host.append(el('p',challengeResult.errors===0&&challengeResult.barCorrect?'pepette-success':'pepette-hint',message));
-   host.append(el('p','pepette-hint','Les cases rouges signalent une erreur. Survole une case rouge pour voir le bit attendu.'));
+
    host.append(button('Nouvelle adresse',newChallenge));
    host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
   }
