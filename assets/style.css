@@ -272,3 +272,12 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .pepette-bar-guidance{margin:8px 0 10px;line-height:1.5}
 .pepette-bar-guidance p{margin:0 0 7px}
 @media(max-width:650px){.pepette-unified-grid{padding-left:62px}.pepette-unified-line .pepette-line-label{left:-63px;width:47px}}
+
+/* V0.3.54 - Lignes resserrees et adresse reseau dans le tableau unique. */
+.pepette-unified-line,.pepette-unified-octet:not(:first-child) .pepette-unified-line{margin-top:0;padding-top:1px;padding-bottom:1px;border-width:1px}
+.pepette-unified-line.is-active{border-width:2px}
+.pepette-unified-line .pepette-bits{margin:0}
+.pepette-unified-line .pepette-bit{min-height:25px}
+.pepette-unified-octet{padding-bottom:3px}
+.pepette-unified-line .pepette-line-label{left:-79px}
+@media(max-width:650px){.pepette-unified-line .pepette-line-label{left:-63px}}
