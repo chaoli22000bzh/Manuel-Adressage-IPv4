@@ -224,3 +224,9 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .pepette-exercise-header>.pepette-action{flex-shrink:0;margin:0;align-self:center}
 .pepette-course-help{margin:0 0 16px}
 @media(max-width:600px){.pepette-exercise-header{flex-wrap:wrap;gap:8px}.pepette-exercise-header>.pepette-action{margin:0 0 4px auto}}
+
+/* V0.3.47 - Ligne CIDR, clic et cliquer-glisser. */
+.pepette-octet.is-complete{opacity:.48}
+.pepette-line-heading{margin:20px 0 10px}
+.pepette-cidr-grid .pepette-octet.is-active{outline:2px solid #2563eb;opacity:1}
+.pepette-cidr-grid .pepette-bit{touch-action:none;user-select:none;-webkit-user-select:none}
