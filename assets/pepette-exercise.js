@@ -696,6 +696,8 @@ if(host&&launch){
   heading.append(el('h3',null,'Calcul du nombre d’hôtes - Avec Pépette'),el('p',null,'Adresse IPv4 : 192.168.10.42/'+hostsPrefix));
   heading.append(el('p','pepette-step-instruction',hostsStep===4?'Bravo ! Ton calcul est terminé.':'Complète la case dans l’égalité, puis vérifie ta réponse.'));
   header.append(heading);host.append(header);
+  const layout=el('div','pepette-hosts-layout');layout.style.cssText='display:flex;align-items:flex-start;flex-wrap:wrap;gap:24px;margin-top:12px';host.append(layout);
+  const work=el('div','pepette-hosts-work');work.style.cssText='flex:1 1 480px;min-width:0';layout.append(work);
   const formula=el('div','pepette-hosts-formula');
   formula.style.cssText='display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;font-size:1.45rem;font-weight:600;line-height:2.5;margin:20px 0 12px';
   formula.append(el('span',null,'Nb hôtes ='));
@@ -725,8 +727,8 @@ if(host&&launch){
    formula.append(el('span',null,'- 2 ='));
   }
   if(hostsStep>=3)formula.append(hostsStep===3?field(result):el('span',null,String(result)));
-  host.append(formula);
-  if(hostsError)host.append(el('p','pepette-hint',hostsError));
+  work.append(formula);
+  if(hostsError)work.append(el('p','pepette-hint',hostsError));
   if(hostsStep<4){
    const verify=button('Vérifier',()=>{
     if(active.value.trim()===active.dataset.expected){
@@ -739,19 +741,20 @@ if(host&&launch){
     }
    });
    active.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();verify.click();}});
-   host.append(verify);
+   work.append(verify);
   }else{
-   host.append(el('p','pepette-success','Bravo ! Tu as trouvé '+result+' hôtes utilisables.'));
-   host.append(button('Nouvelle adresse',hostsStart));
-   host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   work.append(el('p','pepette-success','Bravo ! Tu as trouvé '+result+' hôtes utilisables.'));
+   work.append(button('Nouvelle adresse',hostsStart));
+   work.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
   }
-  const aid=el('div','pepette-exponents');aid.style.marginTop='20px';
-  const helpButton=button('Voir le coup de patte de Pépette sur les exposants',()=>{panel.hidden=!panel.hidden;helpButton.textContent=panel.hidden?'Voir le coup de patte de Pépette sur les exposants':'Refermer le coup de patte';helpButton.setAttribute('aria-expanded',String(!panel.hidden));});
+  const aid=el('aside','pepette-hosts-aid');aid.style.cssText='flex:0 1 340px;max-width:100%;min-width:280px;margin-top:10px';
+  const helpButton=button('Voir le coup de patte',()=>{panel.hidden=!panel.hidden;helpButton.textContent=panel.hidden?'Voir le coup de patte':'Refermer le coup de patte';helpButton.setAttribute('aria-expanded',String(!panel.hidden));});
   helpButton.setAttribute('aria-expanded','false');aid.append(helpButton);
   const panel=el('div');panel.hidden=true;
   const original=document.getElementById('pepette-powers-panel');
   if(original)for(const child of original.children)panel.append(child.cloneNode(true));
-  aid.append(panel);host.append(aid);
+  aid.append(panel);layout.append(aid);
+  const table=panel.querySelector('table');if(table){table.style.cssText='width:auto;max-width:100%;font-size:.85rem;border-collapse:collapse';for(const cell of table.querySelectorAll('th,td')){cell.style.cssText='padding:4px 7px;white-space:nowrap;width:auto;line-height:1.3'};}
  }
 
  launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);else if(topic==='decimal'&&['1','2','3'].includes(level))decimalStart(Number(level));else if(topic==='hotes'&&level==='1')hostsStart();});
