@@ -536,7 +536,7 @@ if(host&&launch){
 
  // Repère orange devant le libellé de la ligne, jamais devant les bits.
  const decimalMarkerStyle=document.createElement('style');
- decimalMarkerStyle.textContent='.pepette-decimal-row-marker{position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:4px;height:20px;background:#f97316;border-radius:2px;pointer-events:none}.pepette-unified-line:has(>.pepette-decimal-row-marker){position:relative}';
+ decimalMarkerStyle.textContent='.pepette-decimal-row-marker{position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:4px;height:20px;background:#f97316;border-radius:2px;pointer-events:none} .pepette-unified-line:has(>.pepette-decimal-row-marker){position:relative}.pepette-decimal-table .pepette-decimal-row-marker{left:auto;right:calc(100% - 3px)}.pepette-unified-line .pepette-line-label .pepette-decimal-row-marker{left:-8px}';
  document.head.append(decimalMarkerStyle);
  // Exercices décimaux : tableau binaire fourni, trois niveaux de guidage.
  let decimalLevel=1,decimalAddress='',decimalValues={},decimalStep=0,decimalError='',decimalLocked=false,decimalErrors={};
@@ -594,9 +594,9 @@ if(host&&launch){
     const highlight=decimalLevel===1&&!complete&&kind===activeRow&&o===activeOctet;
     const marker=!complete&&o===0&&((decimalLevel===1&&kind===activeRow)||(decimalLevel===2&&kind===decimalRows[decimalStep]));
     const line=el('div','pepette-unified-line'+(highlight?' is-active':''));
-    if(marker&&o===0){const labelMarker=el('span','pepette-decimal-row-marker');labelMarker.setAttribute('aria-hidden','true');line.append(labelMarker);}
+    
     if(highlight){line.style.background='rgba(250,174,46,.26)';line.style.outline='2px solid #f59e0b';line.style.borderRadius='5px';}
-    if(o===0)line.append(el('span','pepette-line-label',decimalLabels[kind]+(kind==='cidr'?' /'+prefix:'')));
+    if(o===0){const label=el('span','pepette-line-label',(kind==='cidr'?'CIDR':decimalLabels[kind])+(kind==='cidr'?' /'+prefix:''));if(marker){label.style.position='absolute';const labelMarker=el('span','pepette-decimal-row-marker');labelMarker.setAttribute('aria-hidden','true');label.append(labelMarker);}line.append(label);}
     const bits=el('div','pepette-bits');
     for(let j=0;j<8;j++){
      const one=Boolean((expected[kind][o]>>(7-j))&1);
@@ -635,10 +635,12 @@ if(host&&launch){
     table.append(input);
    }
   }
+  const actions=el('div','pepette-decimal-actions');
+  actions.style.cssText=table.style.cssText+';margin-top:8px';
   host.append(table);
   if(decimalError)host.append(el('p','pepette-hint',decimalError));
   if(!complete){
-   host.append(button(decimalLevel===1?'Vérifier mon octet':decimalLevel===2?'Vérifier ma ligne':'Vérifier mon tableau',()=>{
+   const verifyButton=button(decimalLevel===1?'Vérifier mon octet':decimalLevel===2?'Vérifier ma ligne':'Vérifier mon tableau',()=>{
     const check=decimalLevel===1?[decimalStep]:decimalLevel===2?Array.from({length:4},(_,i)=>decimalStep*4+i):Array.from({length:decimalRows.length*4},(_,i)=>i);
     const missing=check.filter(n=>decimalValues[decimalRows[Math.floor(n/4)]][n%4]==='').length;
     if(missing){decimalError='Complète '+(missing===1?'la case vide.':'les '+missing+' cases vides.');renderDecimal();return;}
@@ -647,7 +649,11 @@ if(host&&launch){
     else if(errors){decimalError=errors+' '+(decimalLevel===1?'octet incorrect.':'octet(s) incorrect(s).')+' Corrige puis vérifie à nouveau.';}
     else{decimalStep++;decimalError='';}
     renderDecimal();
-   }));
+   });
+   if(decimalLevel===1){
+    for(let o=0;o<5;o++){const slot=el('div');if(o===activeOctet+1){slot.append(verifyButton);verifyButton.style.cssText='white-space:nowrap;position:relative;left:50%;transform:translateX(-50%)';}actions.append(slot);}
+    host.append(actions);
+   }else host.append(verifyButton);
   }else{
    host.append(el('p',decimalLocked&&decimalError?'pepette-hint':'pepette-success',decimalLocked?decimalError:'Bravo ! Tu as terminé le tableau.'));
    host.append(button('Nouvelle adresse',()=>decimalStart(decimalLevel)));
