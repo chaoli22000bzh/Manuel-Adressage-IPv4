@@ -765,7 +765,9 @@ if(host&&launch){
   // 55 % millions, 25 % centaines de millions / milliard.
   const roll=Math.random();
   const prefixes=roll<0.10?[16,17,18]:roll<0.20?[13,14,15]:roll<0.75?[4,5,6,7,8,9,10,11,12]:[2,3];
-  hostsExpertPrefix=prefixes[Math.floor(Math.random()*prefixes.length)];
+  // Ne jamais reproposer immédiatement le même CIDR, sans changer les poids des groupes.
+  const candidates=prefixes.filter(prefix=>prefix!==hostsExpertPrefix);
+  hostsExpertPrefix=candidates[Math.floor(Math.random()*candidates.length)];
   hostsExpertChecked=false;hostsExpertValues=null;host.hidden=false;renderHostsExpert();
   host.scrollIntoView({behavior:'smooth',block:'start'});
  }
