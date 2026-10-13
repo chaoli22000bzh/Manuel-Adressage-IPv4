@@ -31,7 +31,7 @@ if(host&&launch){
     cell.type='button';cell.disabled=done||i!==octet;
     cell.setAttribute('aria-label','Octet '+(i+1)+', poids '+w+', bit '+(bits[i][j]?'1':'0'));
     cell.setAttribute('aria-pressed',String(bits[i][j]));
-    cell.addEventListener('click',()=>{bits[i][j]=!bits[i][j];hint=0;render();});
+    cell.addEventListener('click',()=>{bits[i][j]=!bits[i][j];render();});
     row.append(cell);
    });
    part.append(row);table.append(part);
@@ -54,7 +54,14 @@ if(host&&launch){
    host.append(button('Un indice',()=>{hint=Math.min(hint+1,3);render();}));
    if(hint){
     const target=octets[octet];
-    const message=hint===1?'Commence par la plus grande colonne qui ne depasse pas '+target+'.':hint===2?'Les valeurs selectionnees donnent '+sum+'. Cherche comment atteindre '+target+'.':'Les colonnes a utiliser sont : '+weights.filter(w=>{const idx=weights.indexOf(w);return expected[octet][idx]==='1';}).join(' + ')+'.';
+    const remaining=target-sum;
+    const available=weights.filter((w,j)=>!bits[octet][j]&&w<=remaining);
+    const next=available[0];
+    const message=hint===1
+     ?(remaining>0?'Tu as deja obtenu '+sum+'. Il te manque '+remaining+' pour atteindre '+target+'.':'Tu as obtenu '+sum+', soit '+(-remaining)+' de trop. Retire un ou plusieurs bits a 1.')
+     :hint===2
+     ?(remaining>0&&next?'Parmi les colonnes encore vides, cherche une valeur qui ne depasse pas '+remaining+'.':remaining>0?'Il faut revoir les bits selectionnes : aucune colonne vide ne convient pour le moment.':'Regarde les colonnes selectionnees et retire celles qui ne conviennent pas.')
+     :'Pour '+target+', la decomposition attendue est : '+(weights.filter((w,j)=>expected[octet][j]==='1').join(' + ')||'aucun bit a 1')+'. Compare-la avec tes cases.';
     host.append(el('p','pepette-hint',message));
    }
   }
