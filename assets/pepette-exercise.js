@@ -588,37 +588,42 @@ if(host&&launch){
    const vals=el('div','pepette-bits');weights.forEach(w=>vals.append(el('span','pepette-weight',String(w))));part.append(vals);
    for(const kind of decimalRows){
     const highlight=decimalLevel===1&&!complete&&kind===activeRow&&o===activeOctet;
-    const marker=decimalLevel===2&&!complete&&kind===decimalRows[decimalStep];
+    const marker=!complete&&o===0&&((decimalLevel===1&&kind===activeRow)||(decimalLevel===2&&kind===decimalRows[decimalStep]));
     const line=el('div','pepette-unified-line'+(highlight?' is-active':''));
-    if(marker&&o===0){line.style.borderLeft='5px solid #f97316';line.style.paddingLeft='4px';}
+    if(marker){line.style.borderLeft='4px solid #f97316';}
     if(highlight){line.style.background='rgba(250,174,46,.26)';line.style.outline='2px solid #f59e0b';line.style.borderRadius='5px';}
     if(o===0)line.append(el('span','pepette-line-label',decimalLabels[kind]+(kind==='cidr'?' /'+prefix:'')));
     const bits=el('div','pepette-bits');
-    for(let j=0;j<8;j++)bits.append(el('span','pepette-bit'+((expected[kind][o]>>(7-j))&1?' is-one':''),String((expected[kind][o]>>(7-j))&1)));
+    for(let j=0;j<8;j++){
+     const one=Boolean((expected[kind][o]>>(7-j))&1);
+     const cell=el('span','pepette-bit',one?'1':'');
+     cell.style.cssText='display:flex;align-items:center;justify-content:center;background:'+(one?'#d7dee9':'#fff')+';color:#243247;font-weight:600;box-sizing:border-box;min-width:0;';
+     bits.append(cell);
+    }
     line.append(bits);part.append(line);
    }
    reference.append(part);
   }
-  host.append(reference);
-  const title=el('h4',null,'Tableau en décimal');title.style.margin='18px 0 8px';host.append(title);
+  reference.style.marginBottom='24px';host.append(reference);
+  const title=el('h4',null,'Tableau en décimal');title.style.margin='0 0 4px';host.append(title);
   const table=el('div','pepette-decimal-table');
-  table.style.cssText='display:grid;grid-template-columns:minmax(90px,1.5fr) repeat(4,minmax(52px,1fr));gap:6px;align-items:center;max-width:780px';
+  table.style.cssText='display:grid;grid-template-columns:minmax(90px,1.5fr) repeat(4,minmax(52px,1fr));column-gap:6px;row-gap:6px;align-items:center;max-width:780px';
   table.append(el('strong',null,''));
-  for(let o=0;o<4;o++)table.append(el('strong',null,'Octet '+(o+1)));
+  for(let o=0;o<4;o++){const label=el('strong',null,'Octet '+(o+1));label.style.textAlign='center';table.append(label);}
   for(let ri=0;ri<6;ri++){
-   const kind=decimalRows[ri];table.append(el('strong',null,decimalLabels[kind]));
+   const kind=decimalRows[ri];const label=el('strong',null,decimalLabels[kind]);label.style.cssText='text-align:right;padding-right:6px';table.append(label);
    for(let o=0;o<4;o++){
     const index=ri*4+o;
     const editable=!complete&&(decimalLevel===3||(decimalLevel===2&&ri===decimalStep)||(decimalLevel===1&&index===decimalStep));
     const input=el('input');
-    input.type='number';input.min='0';input.max='255';input.step='1';input.inputMode='numeric';
+    input.type='text';input.inputMode='numeric';input.maxLength=3;input.autocomplete='off';
     input.value=decimalValues[kind][o];input.disabled=!editable;
     input.style.cssText='width:100%;min-width:0;box-sizing:border-box;padding:9px 4px;text-align:center;border:2px solid '+(editable?'#f59e0b':'#cbd5e1')+';border-radius:6px;font-size:16px';
     if(decimalLocked&&decimalValues[kind][o]!==String(expected[kind][o])){input.style.borderColor='#dc2626';input.style.background='#fee2e2';}
     input.setAttribute('aria-label',decimalLabels[kind]+', octet '+(o+1));
     input.addEventListener('input',()=>{
      const raw=input.value;
-     if(raw!==''&&(!/^\\d+$/.test(raw)||Number(raw)>255||Number(raw)<0)){
+     if(raw!==''&&(!/^[0-9]+$/.test(raw)||Number(raw)>255)){
       input.value=decimalValues[kind][o];return;
      }
      decimalValues[kind][o]=raw;decimalError='';
