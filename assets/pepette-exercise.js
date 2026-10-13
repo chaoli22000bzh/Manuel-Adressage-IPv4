@@ -759,10 +759,12 @@ if(host&&launch){
  }
 
 
- let hostsExpertPrefix=27,hostsExpertChecked=false,hostsExpertValues=null,hostsExpertRange='large';
+ let hostsExpertPrefix=16,hostsExpertChecked=false,hostsExpertValues=null;
  function hostsExpertStart(){
-  const ranges={small:[24,25,26,27,28,29,30],large:[2,3,4,5,6,7,8,9,10,11,12],random:Array.from({length:29},(_,i)=>i+2)};
-  const prefixes=ranges[hostsExpertRange];
+  // Tirage pondéré : 10 % dizaines de milliers, 10 % centaines de milliers,
+  // 55 % millions, 25 % centaines de millions / milliard.
+  const roll=Math.random();
+  const prefixes=roll<0.10?[16,17,18]:roll<0.20?[13,14,15]:roll<0.75?[4,5,6,7,8,9,10,11,12]:[2,3];
   hostsExpertPrefix=prefixes[Math.floor(Math.random()*prefixes.length)];
   hostsExpertChecked=false;hostsExpertValues=null;host.hidden=false;renderHostsExpert();
   host.scrollIntoView({behavior:'smooth',block:'start'});
@@ -774,19 +776,6 @@ if(host&&launch){
    el('p',null,'Adresse IPv4 : 192.168.10.42/'+hostsExpertPrefix),
    el('p',null,'Construis la formule du nombre d’hôtes utilisables. Une seule tentative par adresse.'));
   host.append(heading);
-  const chooser=el('div','pepette-hosts-expert-range');
-  chooser.style.cssText='display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:12px 0';
-  const label=el('label',null,'Type de réseau :');
-  const rangeSelect=document.createElement('select');
-  rangeSelect.setAttribute('aria-label','Type de réseau pour le niveau expert');
-  rangeSelect.style.cssText='padding:7px 10px;max-width:100%;font:inherit;border-radius:6px';
-  for(const [value,title] of [['small','Petits réseaux : calcul numérique'],['large','Grands réseaux : millions ou milliards'],['random','Surprise : tous les CIDR']]){
-   const option=document.createElement('option');option.value=value;option.textContent=title;rangeSelect.append(option);
-  }
-  rangeSelect.value=hostsExpertRange;
-  rangeSelect.disabled=hostsExpertChecked;
-  rangeSelect.addEventListener('change',()=>{hostsExpertRange=rangeSelect.value;hostsExpertStart();});
-  label.append(rangeSelect);chooser.append(label);host.append(chooser);
   const form=el('div','pepette-hosts-expert-form');
   form.style.cssText='display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:22px 0;font-size:1.5rem';
   const field=(label,width)=>{
