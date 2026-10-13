@@ -649,6 +649,10 @@ if(host&&launch){
     else if(errors){decimalError=errors+' '+(decimalLevel===1?'octet incorrect.':'octet(s) incorrect(s).')+' Corrige puis vérifie à nouveau.';}
     else{decimalStep++;decimalError='';}
     renderDecimal();
+    if(decimalLevel===1&&!decimalLocked){
+     const next=host.querySelector('.pepette-decimal-table input:not(:disabled)');
+     if(next){next.focus({preventScroll:true});if(errors||missing)next.select();}
+    }
    });
    if(decimalLevel===1){
     for(let o=0;o<5;o++){const slot=el('div');if(o===activeOctet+1){slot.append(verifyButton);verifyButton.style.cssText='white-space:nowrap;position:relative;left:50%;transform:translateX(-50%)';}actions.append(slot);}
