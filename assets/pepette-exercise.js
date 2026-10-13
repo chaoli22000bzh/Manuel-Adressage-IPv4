@@ -534,6 +534,10 @@ if(host&&launch){
  }
 
 
+ // Repère orange devant le libellé de la ligne, jamais devant les bits.
+ const decimalMarkerStyle=document.createElement('style');
+ decimalMarkerStyle.textContent='.pepette-decimal-row-marker{position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:4px;height:20px;background:#f97316;border-radius:2px;pointer-events:none}.pepette-unified-line:has(>.pepette-decimal-row-marker){position:relative}';
+ document.head.append(decimalMarkerStyle);
  // Exercices décimaux : tableau binaire fourni, trois niveaux de guidage.
  let decimalLevel=1,decimalAddress='',decimalValues={},decimalStep=0,decimalError='',decimalLocked=false,decimalErrors={};
  const decimalRows=['ip','cidr','network','first','last','broadcast'];
@@ -590,7 +594,7 @@ if(host&&launch){
     const highlight=decimalLevel===1&&!complete&&kind===activeRow&&o===activeOctet;
     const marker=!complete&&o===0&&((decimalLevel===1&&kind===activeRow)||(decimalLevel===2&&kind===decimalRows[decimalStep]));
     const line=el('div','pepette-unified-line'+(highlight?' is-active':''));
-    if(marker){line.style.borderLeft='4px solid #f97316';}
+    if(marker&&o===0){const labelMarker=el('span','pepette-decimal-row-marker');labelMarker.setAttribute('aria-hidden','true');line.append(labelMarker);}
     if(highlight){line.style.background='rgba(250,174,46,.26)';line.style.outline='2px solid #f59e0b';line.style.borderRadius='5px';}
     if(o===0)line.append(el('span','pepette-line-label',decimalLabels[kind]+(kind==='cidr'?' /'+prefix:'')));
     const bits=el('div','pepette-bits');
@@ -611,7 +615,7 @@ if(host&&launch){
   table.append(el('strong',null,''));
   for(let o=0;o<4;o++){const label=el('strong',null,'Octet '+(o+1));label.style.textAlign='center';table.append(label);}
   for(let ri=0;ri<6;ri++){
-   const kind=decimalRows[ri];const label=el('strong',null,decimalLabels[kind]);label.style.cssText='text-align:right;padding-right:6px';table.append(label);
+   const kind=decimalRows[ri];const label=el('strong',null,decimalLabels[kind]);label.style.cssText='text-align:right;padding-right:6px;position:relative';if(!complete&&((decimalLevel===1&&kind===activeRow)||(decimalLevel===2&&kind===decimalRows[decimalStep]))){const labelMarker=el('span','pepette-decimal-row-marker');labelMarker.setAttribute('aria-hidden','true');label.append(labelMarker);}table.append(label);
    for(let o=0;o<4;o++){
     const index=ri*4+o;
     const editable=!complete&&(decimalLevel===3||(decimalLevel===2&&ri===decimalStep)||(decimalLevel===1&&index===decimalStep));
