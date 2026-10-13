@@ -481,8 +481,20 @@ if(host&&launch){
      const clues={ip:'Utilise les valeurs 128, 64, 32, 16, 8, 4, 2 et 1.',cidr:'Compte les bits réseau depuis la gauche.',network:'Compare les bits IPv4 et CIDR.',first:'Pense au dernier bit de la partie hôte.',last:'Le dernier bit de la partie hôte reste à 0.',broadcast:'Tous les bits hôtes sont à 1.'};
      host.append(button(intermediateHint?'Masquer l’indice':'Un indice',()=>{intermediateHint=!intermediateHint;renderChallenge();}));
      if(intermediateHint)host.append(el('p','pepette-hint',clues[kind]));
+     if(kind==='cidr'){
+      const bar=el('div','pepette-challenge-bar');
+      bar.append(el('strong',null,'Barre CIDR : '+(challengeBar===null?'non placée':'après le bit '+challengeBar)));
+      bar.append(el('p',null,'Place la barre CIDR : clique sur le numéro du bit situé juste à gauche de la barre.'));
+      const choices=el('div','pepette-challenge-positions');
+      for(let n=1;n<=32;n++){
+       const b=button(String(n),()=>{challengeBar=n;renderChallenge();});
+       if(challengeBar===n)b.classList.add('is-selected');
+       choices.append(b);
+      }
+      bar.append(choices);host.append(bar);
+     }
      host.append(button('Vérifier ma ligne',()=>{
-      intermediateErrors=challengeBits[kind].filter((v,i)=>v!==expected[kind][i]).length;
+      intermediateErrors=challengeBits[kind].filter((v,i)=>v!==expected[kind][i]).length+(kind==='cidr'&&challengeBar!==prefix?1:0);
       if(intermediateErrors===0){intermediateStep++;intermediateHint=false;intermediateErrors=null;}
       renderChallenge();
      }));
