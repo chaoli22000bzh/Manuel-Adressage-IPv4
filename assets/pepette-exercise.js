@@ -272,14 +272,16 @@ if(host&&launch){
      ['Astuce n° 1 : Je n’oublie pas les 1 !','Observe les bits hôtes, après le CIDR, sur les lignes Dernière IP et Broadcast.','Astuce 1'],
      ['Astuce n° 2 : Je vérifie les deux derniers bits','Compare les deux dernières cases du quatrième octet : Réseau 00, Première IP 01, Dernière IP 10, Broadcast 11.','Astuce 2']
     ];
+    const tipsGrid=el('div','pepette-review-grid');
     tips.forEach(([title,detail,name],i)=>{
      const card=el('div','pepette-review-tip'),photo=el('img','pepette-review-photo');
      photo.src='assets/pepette.webp';photo.alt='Pépette';photo.loading='lazy';
      card.append(photo,el('strong',null,title),el('p',null,detail));
      const toggle=button((reviewShown[i]?'Masquer ':'Afficher ')+name,()=>{reviewShown[i]=!reviewShown[i];render();});
      toggle.setAttribute('aria-pressed',String(reviewShown[i]));
-     card.append(toggle);host.append(card);
+     card.append(toggle);tipsGrid.append(card);
     });
+    host.append(tipsGrid);
     host.append(el('p','pepette-hint','Les couleurs montrent les cases à vérifier directement dans ton tableau.'));
     host.append(button('Valider mon exercice',()=>{stage='finished';render();}));
    }else if(stage==='finished'){
