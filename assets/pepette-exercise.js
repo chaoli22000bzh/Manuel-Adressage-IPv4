@@ -23,10 +23,11 @@ if(host&&launch){
    const original=document.querySelector('#binary-help-panel .binary-help-content');
    if(original){
     const copied=original.cloneNode(true);
-    copied.querySelectorAll('.binary-reference').forEach(n=>n.remove());
+    copied.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+    const originalRows=document.querySelector('#binary-reference-rows');
+    const copiedRows=copied.querySelector('.binary-reference tbody');
+    if(originalRows&&copiedRows)copiedRows.replaceChildren(...Array.from(originalRows.children).map(row=>row.cloneNode(true)));
     courseHelp.append(copied);
-    const note=el('p',null,'Pour consulter aussi le tableau de conversion de 0 à 255, retrouve le coup de patte de Pépette dans le cours, section 1.1.');
-    courseHelp.append(note);
    }
   }
   host.append(courseHelp);
