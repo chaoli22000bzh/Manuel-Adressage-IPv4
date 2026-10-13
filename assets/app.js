@@ -103,7 +103,7 @@ trainingDifficulties.forEach(button=>button.addEventListener('click',()=>{
  refreshTrainingLaunch();
 }));
 if(launchTraining)launchTraining.addEventListener('click',()=>{
- if(!launchTraining.disabled&&launchInfo)launchInfo.textContent=selectedTopic==='binaire'&&selectedDifficulty==='1'?'Prototype : conversion de la première ligne en binaire. Les autres lignes arrivent ensuite.':'Cette combinaison sera disponible dans une prochaine étape du prototype.';
+ if(!launchTraining.disabled&&launchInfo)launchInfo.textContent=selectedTopic==='binaire'&&selectedDifficulty==='1'?'Tableau en binaire avec Pépette : six lignes et autocontrôle.':'Cette combinaison sera disponible dans une prochaine étape du prototype.';
 });
 refreshTrainingLaunch();
 
@@ -127,3 +127,7 @@ for(const card of document.querySelectorAll('.decimal-step')){
  for(let o=0;o<4;o++)markup+='<td colspan="8" class="decimal-value octet-'+(o+1)+'" data-value="'+values[o]+'">?</td>';
  markup+='</tr><tr class="decimal-calculations-row"><th class="decimal-row-name">Calcul</th>';for(let o=0;o<4;o++){const weights=[128,64,32,16,8,4,2,1].filter((_,b)=>binary[o][b]==='1');markup+='<td colspan="8" class="decimal-calculation octet-'+(o+1)+'" hidden><strong>'+values[o]+'</strong> = '+weights.join(' + ')+'</td>';}markup+='</tr></tbody>';table.innerHTML=markup;card.querySelector('.decimal-explanation').hidden=true;
 }
+
+// V0.3.55 - Recentrer la section de test lorsqu'elle s'ouvre.
+const trainingFold=document.getElementById('training-fold');
+if(trainingFold)trainingFold.addEventListener('toggle',()=>{if(trainingFold.open)requestAnimationFrame(()=>trainingFold.scrollIntoView({behavior:'smooth',block:'start'}));});
