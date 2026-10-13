@@ -230,3 +230,14 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .pepette-line-heading{margin:20px 0 10px}
 .pepette-cidr-grid .pepette-octet.is-active{outline:2px solid #2563eb;opacity:1}
 .pepette-cidr-grid .pepette-bit{touch-action:none;user-select:none;-webkit-user-select:none}
+
+/* V0.3.48 - Tableau binaire unique et progressif, en-têtes non répétés. */
+.pepette-unified-octet{opacity:1;padding-bottom:8px}
+.pepette-unified-line{position:relative;padding:5px 1px;border:2px solid transparent;border-radius:5px;margin-top:7px}
+.pepette-unified-line.is-active{border-color:#2563eb;background:rgba(37,99,235,.035)}
+.pepette-unified-line.is-complete{opacity:.48}
+.pepette-unified-line .pepette-bits{margin-top:0}
+.pepette-unified-line .pepette-bit{touch-action:none;user-select:none;-webkit-user-select:none}
+.pepette-line-label{display:block;font-size:10px;font-weight:700;margin-bottom:4px}
+.pepette-unified-octet:not(:first-child) .pepette-unified-line{padding-top:21px}
+@media(max-width:650px){.pepette-line-label{font-size:8px}.pepette-unified-octet:not(:first-child) .pepette-unified-line{padding-top:19px}}
