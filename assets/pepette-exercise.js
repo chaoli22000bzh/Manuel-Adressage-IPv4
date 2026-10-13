@@ -533,5 +533,118 @@ if(host&&launch){
   }
  }
 
- launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);});
+
+ // Exercices décimaux : tableau binaire fourni, trois niveaux de guidage.
+ let decimalLevel=1,decimalAddress='',decimalValues={},decimalStep=0,decimalError='',decimalLocked=false,decimalErrors={};
+ const decimalRows=['ip','cidr','network','first','last','broadcast'];
+ const decimalLabels={ip:'IPv4',cidr:'CIDR',network:'Réseau',first:'1re IP',last:'Dernière IP',broadcast:'Broadcast'};
+ const decimalPrefixesEasy=[8,16,24,25];
+ function decimalStart(level){
+  decimalLevel=level;
+  let octs,prefix;
+  if(level===1){
+   octs=[10+Math.floor(Math.random()*30),Math.floor(Math.random()*32),Math.floor(Math.random()*32),1+Math.floor(Math.random()*30)];
+   prefix=decimalPrefixesEasy[Math.floor(Math.random()*decimalPrefixesEasy.length)];
+  }else{
+   const count=n=>n.toString(2).split('1').length-1;
+   const min=level===2?2:4,max=level===2?5:7;
+   const pool=Array.from({length:255},(_,i)=>i+1).filter(n=>count(n)>=min&&count(n)<=max);
+   const first=pool.filter(n=>n<=223);
+   do{octs=[first[Math.floor(Math.random()*first.length)],...Array.from({length:3},()=>pool[Math.floor(Math.random()*pool.length)])];}while(new Set(octs).size!==4);
+   const prefixes=level===2?intermediatePrefixes:challengePrefixes;
+   prefix=prefixes[Math.floor(Math.random()*prefixes.length)];
+  }
+  decimalAddress=octs.join('.')+'/'+prefix;
+  decimalValues=Object.fromEntries(decimalRows.map(k=>[k,Array(4).fill('')]));
+  decimalStep=0;decimalError='';decimalLocked=false;decimalErrors={};
+  stage='decimal';host.hidden=false;renderDecimal();
+  host.scrollIntoView({behavior:'smooth',block:'start'});
+ }
+ function decimalExpected(){
+  const [ip,p]=decimalAddress.split('/'),prefix=Number(p),octs=ip.split('.').map(Number);
+  const address=octs.reduce((n,v)=>((n*256)+v)>>>0,0);
+  const mask=(0xffffffff<<(32-prefix))>>>0,network=(address&mask)>>>0,broadcast=(network|(~mask))>>>0;
+  const oct=n=>[24,16,8,0].map(shift=>(n>>>shift)&255);
+  return {ip:oct(address),cidr:oct(mask),network:oct(network),first:oct((network+1)>>>0),last:oct((broadcast-1)>>>0),broadcast:oct(broadcast)};
+ }
+ function renderDecimal(){
+  host.replaceChildren();
+  const expected=decimalExpected(),prefix=Number(decimalAddress.split('/')[1]);
+  const total=24,step=Math.min(decimalStep,total-1),activeRow=decimalRows[Math.floor(step/4)],activeOctet=step%4;
+  const complete=decimalLevel===1?decimalStep>=24:decimalLevel===2?decimalStep>=6:decimalLocked;
+  const header=el('div','pepette-exercise-header'),heading=el('div','pepette-exercise-heading');
+  heading.append(el('h3',null,'Tableau en décimal - '+(decimalLevel===1?'Avec Pépette':decimalLevel===2?'Je me débrouille':'Je relève le défi')),el('p',null,'Adresse : '+decimalAddress));
+  const instruction=el('div','pepette-step-instruction');
+  instruction.append(el('strong',null,complete?'Tableau terminé !':decimalLevel===1?'Complète '+decimalLabels[activeRow]+' : octet '+(activeOctet+1)+'.':decimalLevel===2?'Complète la ligne '+decimalLabels[decimalRows[decimalStep]]+'.':'Complète les six lignes du tableau.'));
+  instruction.append(el('p',null,'Observe le tableau binaire fourni, puis écris les valeurs décimales (0 à 255).'));
+  heading.append(instruction);header.append(heading);host.append(header);
+  const reference=el('div','pepette-octets pepette-unified-grid pepette-challenge-grid');
+  for(let o=0;o<4;o++){
+   const part=el('section','pepette-octet pepette-unified-octet');
+   part.append(el('strong',null,'Octet '+(o+1)));
+   const powers=el('div','pepette-bits');
+   weights.forEach((w,j)=>{const p=el('span','pepette-power');p.append(document.createTextNode('2'),el('sup',null,String(7-j)));powers.append(p);});
+   part.append(powers);
+   const vals=el('div','pepette-bits');weights.forEach(w=>vals.append(el('span','pepette-weight',String(w))));part.append(vals);
+   for(const kind of decimalRows){
+    const highlight=decimalLevel===1&&!complete&&kind===activeRow&&o===activeOctet;
+    const marker=decimalLevel===2&&!complete&&kind===decimalRows[decimalStep];
+    const line=el('div','pepette-unified-line'+(highlight?' is-active':''));
+    if(marker&&o===0){line.style.borderLeft='5px solid #f97316';line.style.paddingLeft='4px';}
+    if(highlight){line.style.background='rgba(250,174,46,.26)';line.style.outline='2px solid #f59e0b';line.style.borderRadius='5px';}
+    if(o===0)line.append(el('span','pepette-line-label',decimalLabels[kind]+(kind==='cidr'?' /'+prefix:'')));
+    const bits=el('div','pepette-bits');
+    for(let j=0;j<8;j++)bits.append(el('span','pepette-bit'+((expected[kind][o]>>(7-j))&1?' is-one':''),String((expected[kind][o]>>(7-j))&1)));
+    line.append(bits);part.append(line);
+   }
+   reference.append(part);
+  }
+  host.append(reference);
+  const title=el('h4',null,'Tableau en décimal');title.style.margin='18px 0 8px';host.append(title);
+  const table=el('div','pepette-decimal-table');
+  table.style.cssText='display:grid;grid-template-columns:minmax(90px,1.5fr) repeat(4,minmax(52px,1fr));gap:6px;align-items:center;max-width:780px';
+  table.append(el('strong',null,''));
+  for(let o=0;o<4;o++)table.append(el('strong',null,'Octet '+(o+1)));
+  for(let ri=0;ri<6;ri++){
+   const kind=decimalRows[ri];table.append(el('strong',null,decimalLabels[kind]));
+   for(let o=0;o<4;o++){
+    const index=ri*4+o;
+    const editable=!complete&&(decimalLevel===3||(decimalLevel===2&&ri===decimalStep)||(decimalLevel===1&&index===decimalStep));
+    const input=el('input');
+    input.type='number';input.min='0';input.max='255';input.step='1';input.inputMode='numeric';
+    input.value=decimalValues[kind][o];input.disabled=!editable;
+    input.style.cssText='width:100%;min-width:0;box-sizing:border-box;padding:9px 4px;text-align:center;border:2px solid '+(editable?'#f59e0b':'#cbd5e1')+';border-radius:6px;font-size:16px';
+    if(decimalLocked&&decimalValues[kind][o]!==String(expected[kind][o])){input.style.borderColor='#dc2626';input.style.background='#fee2e2';}
+    input.setAttribute('aria-label',decimalLabels[kind]+', octet '+(o+1));
+    input.addEventListener('input',()=>{
+     const raw=input.value;
+     if(raw!==''&&(!/^\\d+$/.test(raw)||Number(raw)>255||Number(raw)<0)){
+      input.value=decimalValues[kind][o];return;
+     }
+     decimalValues[kind][o]=raw;decimalError='';
+    });
+    table.append(input);
+   }
+  }
+  host.append(table);
+  if(decimalError)host.append(el('p','pepette-hint',decimalError));
+  if(!complete){
+   host.append(button(decimalLevel===1?'Vérifier mon octet':decimalLevel===2?'Vérifier ma ligne':'Vérifier mon tableau',()=>{
+    const check=decimalLevel===1?[decimalStep]:decimalLevel===2?Array.from({length:4},(_,i)=>decimalStep*4+i):Array.from({length:24},(_,i)=>i);
+    const missing=check.filter(n=>decimalValues[decimalRows[Math.floor(n/4)]][n%4]==='').length;
+    if(missing){decimalError='Complète '+(missing===1?'la case vide.':'les '+missing+' cases vides.');renderDecimal();return;}
+    const errors=check.filter(n=>Number(decimalValues[decimalRows[Math.floor(n/4)]][n%4])!==expected[decimalRows[Math.floor(n/4)]][n%4]).length;
+    if(decimalLevel===3){decimalLocked=true;decimalError=errors?'Résultat : '+errors+' octet(s) incorrect(s).':'Bravo ! Ton tableau est correct.';}
+    else if(errors){decimalError=errors+' '+(decimalLevel===1?'octet incorrect.':'octet(s) incorrect(s).')+' Corrige puis vérifie à nouveau.';}
+    else{decimalStep++;decimalError='';}
+    renderDecimal();
+   }));
+  }else{
+   host.append(el('p',decimalLocked&&decimalError?'pepette-hint':'pepette-success',decimalLocked?decimalError:'Bravo ! Tu as terminé le tableau.'));
+   host.append(button('Nouvelle adresse',()=>decimalStart(decimalLevel)));
+   host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+  }
+ }
+
+ launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);else if(topic==='decimal'&&['1','2','3'].includes(level))decimalStart(Number(level));});
 }
