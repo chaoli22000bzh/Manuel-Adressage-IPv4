@@ -265,3 +265,10 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .pepette-unified-line .pepette-line-label{position:absolute;left:-67px;top:50%;transform:translateY(-50%);width:61px;margin:0;text-align:right;font-size:11px;white-space:nowrap}
 .pepette-unified-line .pepette-bit{min-height:27px}
 @media(max-width:650px){.pepette-unified-grid{padding-left:52px}.pepette-unified-line .pepette-line-label{left:-53px;width:47px;font-size:9px}.pepette-unified-line,.pepette-unified-octet:not(:first-child) .pepette-unified-line{padding:3px 1px}}
+
+/* V0.3.52 - Libelles eloignes du cadre, aide en paragraphes courts. */
+.pepette-unified-grid{padding-left:78px}
+.pepette-unified-line .pepette-line-label{left:-79px;width:61px}
+.pepette-bar-guidance{margin:8px 0 10px;line-height:1.5}
+.pepette-bar-guidance p{margin:0 0 7px}
+@media(max-width:650px){.pepette-unified-grid{padding-left:62px}.pepette-unified-line .pepette-line-label{left:-63px;width:47px}}
