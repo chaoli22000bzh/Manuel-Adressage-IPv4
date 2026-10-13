@@ -604,16 +604,28 @@ if(host&&launch){
      cell.style.cssText='display:flex;align-items:center;justify-content:center;background:'+(one&&decimalLevel===1?'#d7dee9':'#fff')+';color:#243247;font-weight:600;box-sizing:border-box;min-width:0;';
      bits.append(cell);
     }
-    line.append(bits);part.append(line);
+    line.append(bits);
+    if(decimalLevel===1&&kind!=='ip'&&o===Math.floor(prefix/8)&&prefix%8!==0){
+     // Frontière CIDR dans l'octet, après le dernier bit réseau.
+     const pos=prefix%8;
+     const cells=bits.children;
+     if(cells[pos-1])cells[pos-1].style.borderRight='3px solid #e67e22';
+    }
+    if(decimalLevel===1&&kind!=='ip'&&prefix%8===0&&o===prefix/8-1){
+     bits.lastElementChild.style.borderRight='3px solid #e67e22';
+    }
+    part.append(line);
    }
    reference.append(part);
   }
   reference.style.marginBottom='24px';host.append(reference);
   const title=el('h4',null,'Tableau en décimal');title.style.margin='0 0 4px';host.append(title);
   const table=el('div','pepette-decimal-table');
-  table.style.cssText='display:grid;grid-template-columns:minmax(90px,1.5fr) repeat(4,minmax(52px,1fr));column-gap:6px;row-gap:6px;align-items:center;max-width:780px';
+  table.style.cssText='display:grid;grid-template-columns:minmax(90px,1.5fr) repeat(4,minmax(52px,1fr))'+(decimalLevel===2?' minmax(125px,auto)':'')+';column-gap:6px;row-gap:6px;align-items:center;max-width:'+(decimalLevel===2?'980px':'780px');
   table.append(el('strong',null,''));
   for(let o=0;o<4;o++){const label=el('strong',null,'Octet '+(o+1));label.style.textAlign='center';table.append(label);}
+  if(decimalLevel===2)table.append(el('span'));
+  let lineButtonSlot=null;
   for(let ri=0;ri<decimalRows.length;ri++){
    const kind=decimalRows[ri];const label=el('strong',null,decimalLabels[kind]);label.style.cssText='text-align:right;padding-right:6px;position:relative';if(!complete&&((decimalLevel===1&&kind===activeRow)||(decimalLevel===2&&kind===decimalRows[decimalStep]))){const labelMarker=el('span','pepette-decimal-row-marker');labelMarker.setAttribute('aria-hidden','true');label.append(labelMarker);}table.append(label);
    for(let o=0;o<4;o++){
@@ -634,6 +646,7 @@ if(host&&launch){
     });
     table.append(input);
    }
+   if(decimalLevel===2){const slot=el('div');slot.style.cssText='min-width:125px;display:flex;align-items:center;justify-content:flex-start';if(!complete&&ri===decimalStep)lineButtonSlot=slot;table.append(slot);}
   }
   const actions=el('div','pepette-decimal-actions');
   actions.style.cssText=table.style.cssText+';margin-top:8px';
@@ -657,7 +670,8 @@ if(host&&launch){
    if(decimalLevel===1){
     for(let o=0;o<5;o++){const slot=el('div');if(o===activeOctet+1){slot.append(verifyButton);verifyButton.style.cssText='white-space:nowrap;position:relative;left:50%;transform:translateX(-50%)';}actions.append(slot);}
     host.append(actions);
-   }else host.append(verifyButton);
+   }else if(decimalLevel===2&&lineButtonSlot){verifyButton.style.whiteSpace='nowrap';lineButtonSlot.append(verifyButton);}
+   else host.append(verifyButton);
   }else{
    host.append(el('p',decimalLocked&&decimalError?'pepette-hint':'pepette-success',decimalLocked?decimalError:'Bravo ! Tu as terminé le tableau.'));
    host.append(button('Nouvelle adresse',()=>decimalStart(decimalLevel)));
