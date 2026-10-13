@@ -744,6 +744,7 @@ if(host&&launch){
    work.append(verify);
   }else{
    work.append(el('p','pepette-success','Bravo ! Tu as trouvé '+result+' hôtes utilisables.'));
+   work.append(el('p',null,'Tu peux donc attribuer une adresse IP à '+result+' équipements sur ce réseau, par exemple des ordinateurs, des serveurs, des imprimantes ou du matériel réseau.'));
    work.append(button('Nouvelle adresse',hostsStart));
    work.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
   }
@@ -757,5 +758,72 @@ if(host&&launch){
   const table=panel.querySelector('table');if(table){table.style.cssText='width:auto;max-width:100%;font-size:.85rem;border-collapse:collapse';for(const cell of table.querySelectorAll('th,td')){cell.style.cssText='padding:4px 7px;white-space:nowrap;width:auto;line-height:1.3'};}
  }
 
- launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);else if(topic==='decimal'&&['1','2','3'].includes(level))decimalStart(Number(level));else if(topic==='hotes'&&level==='1')hostsStart();});
+
+ let hostsExpertPrefix=27,hostsExpertChecked=false,hostsExpertValues=null;
+ const hostsExpertPrefixes=[2,3,4,5,6,11,12,13,14,19,20,21,22,24,25,26,27,28,29,30];
+ function hostsExpertStart(){
+  hostsExpertPrefix=hostsExpertPrefixes[Math.floor(Math.random()*hostsExpertPrefixes.length)];
+  hostsExpertChecked=false;hostsExpertValues=null;host.hidden=false;renderHostsExpert();
+  host.scrollIntoView({behavior:'smooth',block:'start'});
+ }
+ function renderHostsExpert(){
+  host.replaceChildren();
+  const heading=el('div','pepette-exercise-heading');
+  heading.append(el('h3',null,'Calcul du nombre d’hôtes - Je relève le défi'),
+   el('p',null,'Adresse IPv4 : 192.168.10.42/'+hostsExpertPrefix),
+   el('p',null,'Construis la formule du nombre d’hôtes utilisables. Une seule tentative par adresse.'));
+  host.append(heading);
+  const form=el('div','pepette-hosts-expert-form');
+  form.style.cssText='display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:22px 0;font-size:1.5rem';
+  const field=(label,width)=>{
+   const input=el('input');input.type='text';input.inputMode='numeric';input.autocomplete='off';
+   input.setAttribute('aria-label',label);input.placeholder='?';
+   input.style.cssText='width:'+width+'px;box-sizing:border-box;text-align:center;font:inherit;padding:5px;border:2px solid #9ca3af;border-radius:5px';
+   return input;
+  };
+  const base=field('Base',64),exponent=field('Exposant',60),last=field('Nombre après opération',64);
+  const power=el('span');power.style.cssText='display:inline-flex;align-items:flex-start';
+  const sup=document.createElement('sup');sup.style.cssText='font-size:.7em;position:relative;top:-.2em';sup.append(exponent);
+  power.append(base,sup);
+  const operation=document.createElement('select');operation.setAttribute('aria-label','Opération');
+  operation.style.cssText='font:inherit;padding:5px;border:2px solid #9ca3af;border-radius:5px';
+  for(const [value,label] of [['','?'],['+','+'],['-','−'],['×','×'],['÷','÷']]){
+   const option=document.createElement('option');option.value=value;option.textContent=label;operation.append(option);
+  }
+  form.append(power,operation,last);host.append(form);
+  if(hostsExpertChecked&&hostsExpertValues){
+   base.value=hostsExpertValues.base;exponent.value=hostsExpertValues.exponent;
+   operation.value=hostsExpertValues.operation;last.value=hostsExpertValues.last;
+   for(const control of [base,exponent,operation,last])control.disabled=true;
+   const expectedExponent=32-hostsExpertPrefix;
+   const correctBase=base.value.trim()==='2',correctExp=exponent.value.trim()===String(expectedExponent);
+   const correctOp=operation.value==='-',correctLast=last.value.trim()==='2';
+   const correct=correctBase&&correctExp&&correctOp&&correctLast;
+   const msg=el('div','pepette-hosts-expert-feedback');
+   if(correct){
+    msg.append(el('p','pepette-success','Bravo ! Tu as trouvé la bonne formule.'));
+    const count=2**expectedExponent-2;
+    msg.append(el('p',null,'Tu peux donc attribuer une adresse IP à '+count.toLocaleString('fr-FR')+' équipements sur ce réseau, par exemple des ordinateurs, des serveurs, des imprimantes ou du matériel réseau.'));
+   }else{
+    msg.append(el('p','pepette-hint','Cette formule n’est pas correcte. Voici ce qu’il faut revoir :'));
+    if(!correctBase||!correctExp)msg.append(el('p',null,'Vérifie la puissance de 2 : la base est 2 et l’exposant correspond aux bits disponibles pour les hôtes (32 moins le CIDR).'));
+    if(!correctOp||!correctLast)msg.append(el('p',null,'Pense aux deux adresses qu’on ne peut pas attribuer : l’adresse du réseau et l’adresse de broadcast. Il faut les retirer du total.'));
+    const solution=el('p');solution.append('Formule attendue : 2');
+    const solSup=document.createElement('sup');solSup.textContent=String(expectedExponent);solution.append(solSup,' − 2');
+    msg.append(solution);
+   }
+   host.append(msg);
+  }else{
+   host.append(button('Vérifier',()=>{
+    hostsExpertValues={base:base.value,exponent:exponent.value,operation:operation.value,last:last.value};
+    hostsExpertChecked=true;renderHostsExpert();
+   }));
+  }
+  if(hostsExpertChecked){
+   host.append(button('Nouvelle adresse',hostsExpertStart));
+   host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+  }
+ }
+
+ launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);else if(topic==='decimal'&&['1','2','3'].includes(level))decimalStart(Number(level));else if(topic==='hotes'&&level==='1')hostsStart();else if(topic==='hotes'&&level==='3')hostsExpertStart();});
 }
