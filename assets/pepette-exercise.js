@@ -417,9 +417,9 @@ if(host&&launch){
   if(!challengeLocked){
    const bar=el('div','pepette-challenge-bar');
    bar.append(el('strong',null,'Barre CIDR : '+(challengeBar===null?'non placée':'après le bit '+challengeBar)));
-   bar.append(el('p',null,'Choisis la position de la barre après un bit :'));
+   bar.append(el('p',null,'Place la barre CIDR : clique sur le numéro du bit situé juste à gauche de la barre.'));
    const choices=el('div','pepette-challenge-positions');
-   for(let n=1;n<=31;n++){
+   for(let n=1;n<=32;n++){
     const b=button(String(n),()=>{challengeBar=n;renderChallenge();});
     if(challengeBar===n)b.classList.add('is-selected');
     b.setAttribute('aria-pressed',String(challengeBar===n));
