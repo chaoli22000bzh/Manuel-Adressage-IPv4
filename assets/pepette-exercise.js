@@ -6,17 +6,17 @@ const launch=document.getElementById('launch-training');
 if(host&&launch){
  const examples=['10.11.12.13/8','172.16.1.1/16','192.168.1.1/24','10.1.2.3/8','172.16.2.1/16','192.168.0.1/24'];
  const weights=[128,64,32,16,8,4,2,1];
- let example=0,octet=0,bits=Array.from({length:4},()=>Array(8).fill(false)),hint=0,stage='ip',cidrBits=Array(32).fill(false),showCourseHelp=false;
+ let example=0,octet=0,bits=Array.from({length:4},()=>Array(8).fill(false)),hint=0,stage='ip',cidrBits=Array(32).fill(false),barPosition=null,barHint=0,barFeedback='',showCourseHelp=false;
  const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
  const button=(label,fn)=>{const b=el('button','pepette-action',label);b.type='button';b.addEventListener('click',fn);return b;};
- function start(){octet=0;hint=0;stage='ip';cidrBits=Array(32).fill(false);showCourseHelp=false;bits=Array.from({length:4},()=>Array(8).fill(false));host.hidden=false;render();host.scrollIntoView({behavior:'smooth',block:'start'});}
+ function start(){octet=0;hint=0;stage='ip';cidrBits=Array(32).fill(false);barPosition=null;barHint=0;barFeedback='';showCourseHelp=false;bits=Array.from({length:4},()=>Array(8).fill(false));host.hidden=false;render();host.scrollIntoView({behavior:'smooth',block:'start'});}
  function render(){
   host.replaceChildren();
   const [ip,cidr]=examples[example].split('/'),octets=ip.split('.').map(Number),expected=binaryOctets(ip);
   const header=el('div','pepette-exercise-header');
   const heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Tableau en binaire - Avec Pépette'),el('p',null,'Adresse : '+ip+'/'+cidr));
-  heading.append(el('p','pepette-progress',stage==='ip'?'Adresse IPv4 - octet '+(octet+1)+' sur 4':stage==='cidr'?'Ligne CIDR - place les bits réseau à 1':'Lignes IPv4 et CIDR terminées !'));
+  heading.append(el('p','pepette-progress',stage==='ip'?'Adresse IPv4 - octet '+(octet+1)+' sur 4':stage==='cidr'?'Ligne CIDR - place les bits réseau à 1':stage==='bar'?'Place la barre de séparation réseau / hôte':'Lignes IPv4, CIDR et barre terminées !'));
   const helpToggle=button(showCourseHelp?'Masquer le coup de patte de Pépette':'Revoir le binaire avec Pépette',()=>{showCourseHelp=!showCourseHelp;render();});
   helpToggle.setAttribute('aria-expanded',String(showCourseHelp));
   header.append(heading,helpToggle);
@@ -64,7 +64,7 @@ if(host&&launch){
    });
    ipLine.append(ipRow);part.append(ipLine);
    if(stage!=='ip'){
-    const cidrLine=el('div','pepette-unified-line'+(stage==='cidr'?' is-active':' is-complete'));
+    const cidrLine=el('div','pepette-unified-line'+((stage==='cidr'||stage==='bar')?' is-active':' is-complete'));
     if(i===0)cidrLine.append(el('span','pepette-line-label','CIDR /'+cidr));
     const row=el('div','pepette-bits');
     for(let j=0;j<8;j++){
@@ -72,7 +72,29 @@ if(host&&launch){
      cell.type='button';cell.disabled=stage!=='cidr';cell.dataset.bit=String(k);
      cell.setAttribute('aria-label','Bit CIDR '+(k+1));cell.setAttribute('aria-pressed',String(cidrBits[k]));row.append(cell);
     }
-    cidrLine.append(row);part.append(cidrLine);
+    cidrLine.append(row);
+    if(stage==='bar'||stage==='finished'){
+     const chosen=barPosition!==null&&Math.floor((barPosition-1)/8)===i;
+     if(chosen){
+      const bitIndex=(barPosition-1)%8;
+      row.children[bitIndex].classList.add('pepette-bar-anchor');
+     }
+     if(stage==='bar'){
+      for(let j=0;j<8;j++){
+       const k=i*8+j+1;
+       const target=row.children[j];
+       target.classList.add('pepette-bar-cell');
+       const marker=el('button','pepette-bar-target'+(barPosition===k?' is-selected':''),'');
+       marker.type='button';
+       marker.setAttribute('aria-label','Placer la barre après le bit '+k);
+       marker.title='Après le bit '+k;
+       marker.addEventListener('click',()=>{barPosition=k;barFeedback='';render();});
+       const wrap=el('span','pepette-bar-slot');
+       target.replaceWith(wrap);wrap.append(target,marker);
+      }
+     }
+    }
+    part.append(cidrLine);
    }
    if(stage==='ip'&&i===octet){
     const sum=weights.reduce((total,w,j)=>total+(bits[i][j]?w:0),0);
@@ -90,7 +112,18 @@ if(host&&launch){
   host.append(table);
   if(stage!=='ip'){
    const cidrTable=table;
-   if(stage==='cidr'){
+   if(stage==='bar'){
+    host.append(el('p','pepette-guidance','Clique sur la séparation située après le dernier bit réseau. Tu peux déplacer la barre avant de la valider.'));
+    if(barPosition!==null)host.append(el('p','pepette-total','Barre placée après le bit '+barPosition+'.'));
+    host.append(button('Vérifier la barre',()=>{
+     if(barPosition===Number(cidr)){stage='finished';barFeedback='';}
+     else barFeedback=barPosition===null?'Place d’abord la barre entre deux bits.':'Ce n’est pas encore la bonne séparation. Essaie de nouveau.';
+     render();
+    }));
+    host.append(button('Un indice',()=>{barHint=Math.min(3,barHint+1);render();}));
+    if(barFeedback)host.append(el('p','pepette-hint',barFeedback));
+    if(barHint)host.append(el('p','pepette-hint',barHint===1?'Le /'+cidr+' indique le nombre de bits réseau.':barHint===2?'Compte '+cidr+' bits en partant de la gauche. La barre se place juste après le dernier.':'Chaque octet contient 8 bits. Pour /'+cidr+', la barre est après le bit '+cidr+'.'));
+   }else if(stage==='cidr'){
     let drag=null;
     const paint=(start,end,value)=>{
      for(let k=Math.min(start,end);k<=Math.max(start,end);k++)cidrBits[k]=value;
@@ -113,14 +146,14 @@ if(host&&launch){
     cidrTable.addEventListener('pointercancel',e=>{if(drag&&e.pointerId===drag.id){cidrBits=drag.original;drag=null;render();}});
     const count=cidrBits.filter(Boolean).length,correct=cidrBits.every((v,k)=>v===(k<Number(cidr)));
     host.append(el('p','pepette-total','Bits réseau à 1 : '+count+' / '+cidr));
-    if(correct){host.append(el('p','pepette-success','Bravo ! Tu as placé les '+cidr+' bits réseau.'));host.append(button('Valider la ligne CIDR',()=>{stage='finished';render();}));}
+    if(correct){host.append(el('p','pepette-success','Bravo ! Tu as placé les '+cidr+' bits réseau.'));host.append(button('Valider la ligne CIDR',()=>{stage='bar';barPosition=null;barHint=0;barFeedback='';render();}));}
     else{
      host.append(el('p','pepette-guidance','Clique sur les cases ou maintiens le clic et glisse pour remplir plusieurs bits. Un second clic retire un 1.'));
      host.append(button('Un indice',()=>{hint=Math.min(hint+1,3);render();}));
      if(hint)host.append(el('p','pepette-hint',hint===1?'Le /'+cidr+' indique le nombre de bits réseau à 1.':hint===2?'Commence à gauche, au premier bit, et avance vers la droite.':'Les '+cidr+' premiers bits sont à 1, les autres restent à 0.'));
     }
    }else{
-    host.append(el('p','pepette-success','Bravo ! Tu as terminé les lignes Adresse IPv4 et CIDR.'));
+    host.append(el('p','pepette-success','Bravo ! Tu as placé la barre CIDR au bon endroit.'));
     host.append(button('Nouvelle adresse',()=>{example=(example+1)%examples.length;start();}));
     host.append(button('Revenir aux choix',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
    }
