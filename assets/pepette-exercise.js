@@ -393,7 +393,7 @@ if(host&&launch){
    instruction.append(el('p',null,intermediateStep===6?'Toutes les lignes sont validées.':'Remplis les 32 bits, puis vérifie ta ligne.'));
    if(intermediateStep<6)instruction.append(el('p',null,'Une case vide représente un bit à 0.'));
   }else{
-   instruction.append(el('strong',null,challengeLocked?'Correction de ton tableau.':'Complète les six lignes du tableau.'));
+   instruction.append(el('strong',null,challengeLocked?'Correction de ton tableau.':'Complète les cinq lignes du tableau.'));
    instruction.append(el('p',null,challengeLocked?'Tes réponses sont figées. Les erreurs sont indiquées en rouge.':'Tu peux travailler dans l’ordre que tu veux. Une case vide représente un bit à 0.'));
    instruction.append(el('p',null,challengeLocked?'':'Place aussi la barre CIDR. Vérifie tout ton travail à la fin.'));
   }
@@ -540,8 +540,8 @@ if(host&&launch){
  document.head.append(decimalMarkerStyle);
  // Exercices décimaux : tableau binaire fourni, trois niveaux de guidage.
  let decimalLevel=1,decimalAddress='',decimalValues={},decimalStep=0,decimalError='',decimalLocked=false,decimalErrors={};
- const decimalRows=['ip','cidr','network','first','last','broadcast'];
- const decimalLabels={ip:'IPv4',cidr:'CIDR',network:'Réseau',first:'1re IP',last:'Dernière IP',broadcast:'Broadcast'};
+ const decimalRows=['cidr','network','first','last','broadcast'];
+ const decimalLabels={ip:'IPv4',cidr:'Masque de sous-réseau',network:'Réseau',first:'1re IP',last:'Dernière IP',broadcast:'Broadcast'};
  const decimalPrefixesEasy=[8,16,24,25];
  function decimalStart(level){
   decimalLevel=level;
@@ -574,8 +574,8 @@ if(host&&launch){
  function renderDecimal(){
   host.replaceChildren();
   const expected=decimalExpected(),prefix=Number(decimalAddress.split('/')[1]);
-  const total=24,step=Math.min(decimalStep,total-1),activeRow=decimalRows[Math.floor(step/4)],activeOctet=step%4;
-  const complete=decimalLevel===1?decimalStep>=24:decimalLevel===2?decimalStep>=6:decimalLocked;
+  const total=decimalRows.length*4,step=Math.min(decimalStep,total-1),activeRow=decimalRows[Math.floor(step/4)],activeOctet=step%4;
+  const complete=decimalLevel===1?decimalStep>=total:decimalLevel===2?decimalStep>=decimalRows.length:decimalLocked;
   const header=el('div','pepette-exercise-header'),heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Tableau en décimal - '+(decimalLevel===1?'Avec Pépette':decimalLevel===2?'Je me débrouille':'Je relève le défi')),el('p',null,'Adresse : '+decimalAddress));
   const instruction=el('div','pepette-step-instruction');
@@ -590,7 +590,7 @@ if(host&&launch){
    weights.forEach((w,j)=>{const p=el('span','pepette-power');p.append(document.createTextNode('2'),el('sup',null,String(7-j)));powers.append(p);});
    part.append(powers);
    const vals=el('div','pepette-bits');weights.forEach(w=>vals.append(el('span','pepette-weight',String(w))));part.append(vals);
-   for(const kind of decimalRows){
+   for(const kind of ['ip',...decimalRows]){
     const highlight=decimalLevel===1&&!complete&&kind===activeRow&&o===activeOctet;
     const marker=!complete&&o===0&&((decimalLevel===1&&kind===activeRow)||(decimalLevel===2&&kind===decimalRows[decimalStep]));
     const line=el('div','pepette-unified-line'+(highlight?' is-active':''));
@@ -614,7 +614,7 @@ if(host&&launch){
   table.style.cssText='display:grid;grid-template-columns:minmax(90px,1.5fr) repeat(4,minmax(52px,1fr));column-gap:6px;row-gap:6px;align-items:center;max-width:780px';
   table.append(el('strong',null,''));
   for(let o=0;o<4;o++){const label=el('strong',null,'Octet '+(o+1));label.style.textAlign='center';table.append(label);}
-  for(let ri=0;ri<6;ri++){
+  for(let ri=0;ri<decimalRows.length;ri++){
    const kind=decimalRows[ri];const label=el('strong',null,decimalLabels[kind]);label.style.cssText='text-align:right;padding-right:6px;position:relative';if(!complete&&((decimalLevel===1&&kind===activeRow)||(decimalLevel===2&&kind===decimalRows[decimalStep]))){const labelMarker=el('span','pepette-decimal-row-marker');labelMarker.setAttribute('aria-hidden','true');label.append(labelMarker);}table.append(label);
    for(let o=0;o<4;o++){
     const index=ri*4+o;
@@ -639,7 +639,7 @@ if(host&&launch){
   if(decimalError)host.append(el('p','pepette-hint',decimalError));
   if(!complete){
    host.append(button(decimalLevel===1?'Vérifier mon octet':decimalLevel===2?'Vérifier ma ligne':'Vérifier mon tableau',()=>{
-    const check=decimalLevel===1?[decimalStep]:decimalLevel===2?Array.from({length:4},(_,i)=>decimalStep*4+i):Array.from({length:24},(_,i)=>i);
+    const check=decimalLevel===1?[decimalStep]:decimalLevel===2?Array.from({length:4},(_,i)=>decimalStep*4+i):Array.from({length:decimalRows.length*4},(_,i)=>i);
     const missing=check.filter(n=>decimalValues[decimalRows[Math.floor(n/4)]][n%4]==='').length;
     if(missing){decimalError='Complète '+(missing===1?'la case vide.':'les '+missing+' cases vides.');renderDecimal();return;}
     const errors=check.filter(n=>Number(decimalValues[decimalRows[Math.floor(n/4)]][n%4])!==expected[decimalRows[Math.floor(n/4)]][n%4]).length;
