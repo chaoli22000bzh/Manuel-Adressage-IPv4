@@ -103,7 +103,7 @@ trainingDifficulties.forEach(button=>button.addEventListener('click',()=>{
  refreshTrainingLaunch();
 }));
 if(launchTraining)launchTraining.addEventListener('click',()=>{
- if(!launchTraining.disabled&&launchInfo)launchInfo.textContent=selectedTopic==='binaire'&&selectedDifficulty==='1'?'Tableau en binaire avec Pépette : six lignes et autocontrôle.':'Cette combinaison sera disponible dans une prochaine étape du prototype.';
+ if(!launchTraining.disabled&&launchInfo)launchInfo.textContent=selectedTopic==='binaire'&&selectedDifficulty==='1'?'Tableau en binaire avec Pépette : six lignes et autocontrôle.':selectedTopic==='binaire'&&selectedDifficulty==='3'?'Je relève le défi : tableau complet et vérification finale.':'Cette combinaison sera disponible dans une prochaine étape du prototype.';
 });
 refreshTrainingLaunch();
 
