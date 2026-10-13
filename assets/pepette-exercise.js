@@ -13,12 +13,15 @@ if(host&&launch){
  function render(){
   host.replaceChildren();
   const [ip,cidr]=examples[example].split('/'),octets=ip.split('.').map(Number),expected=binaryOctets(ip);
-  host.append(el('h3',null,'Tableau en binaire - Avec Pépette'),el('p',null,'Adresse : '+ip+'/'+cidr));
-  host.append(el('p','pepette-progress',done?'Première ligne terminée !':'Adresse IPv4 - octet '+(octet+1)+' sur 4'));
-  const courseHelp=el('div','pepette-course-help');
-  const helpToggle=button(showCourseHelp?'Masquer le coup de patte de Pépette':'🐾 Revoir le binaire avec Pépette',()=>{showCourseHelp=!showCourseHelp;render();});
+  const header=el('div','pepette-exercise-header');
+  const heading=el('div','pepette-exercise-heading');
+  heading.append(el('h3',null,'Tableau en binaire - Avec Pépette'),el('p',null,'Adresse : '+ip+'/'+cidr));
+  heading.append(el('p','pepette-progress',done?'Première ligne terminée !':'Adresse IPv4 - octet '+(octet+1)+' sur 4'));
+  const helpToggle=button(showCourseHelp?'Masquer le coup de patte de Pépette':'Revoir le binaire avec Pépette',()=>{showCourseHelp=!showCourseHelp;render();});
   helpToggle.setAttribute('aria-expanded',String(showCourseHelp));
-  courseHelp.append(helpToggle);
+  header.append(heading,helpToggle);
+  host.append(header);
+  const courseHelp=el('div','pepette-course-help');
   if(showCourseHelp){
    const original=document.querySelector('#binary-help-panel .binary-help-content');
    if(original){
@@ -36,7 +39,7 @@ if(host&&launch){
     courseHelp.append(pepetteIntro);
    }
   }
-  host.append(courseHelp);
+  if(showCourseHelp)host.append(courseHelp);
   const table=el('div','pepette-octets');
   octets.forEach((value,i)=>{
    const part=el('section','pepette-octet'+(i===octet&&!done?' is-active':''));
