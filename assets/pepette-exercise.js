@@ -114,11 +114,8 @@ if(host&&launch){
    const cidrTable=table;
    if(stage==='bar'){
     const guidance=el('div','pepette-bar-guidance');
-    guidance.append(el('p',null,'À quoi sert la barre ?'));
-    guidance.append(el('p',null,'Elle sépare les bits du réseau, à gauche, des bits des machines, à droite.'));
-    guidance.append(el('p',null,'Pour notre adresse /'+cidr+' : les '+cidr+' premiers bits appartiennent au réseau. Les '+(32-Number(cidr))+' autres appartiennent aux machines.'));
-    const octetEnd=Number(cidr)/8;
-    guidance.append(el('p',null,Number(cidr)%8===0?'À toi de jouer ! Clique à la fin de l’octet '+octetEnd+', juste après son dernier bit.':'À toi de jouer ! Clique juste après le '+(Number(cidr)%8)+'e bit de l’octet '+(Math.floor(Number(cidr)/8)+1)+'.'));
+    guidance.append(el('p',null,'Place la barre CIDR.'));
+    guidance.append(el('p',null,'Clique après le dernier 1 bleu.'));
     host.append(guidance);
     if(barPosition!==null)host.append(el('p','pepette-total','Barre placée après le bit '+barPosition+'.'));
     host.append(button('Vérifier la barre',()=>{
@@ -130,8 +127,8 @@ if(host&&launch){
     if(barFeedback)host.append(el('p','pepette-hint',barFeedback));
     if(barHint){
      const full=Number(cidr)%8===0,oct=Math.floor(Number(cidr)/8),remaining=Number(cidr)%8;
-     const msg=barHint===1?'Regarde la ligne CIDR /'+cidr+'. Les cases bleues montrent les bits du réseau.'
-      :barHint===2?'La barre doit être placée juste après la dernière case bleue, avant les cases blanches.'
+     const msg=barHint===1?'Les cases bleues montrent les bits du réseau.'
+      :barHint===2?'Place la barre après la dernière case bleue.'
       :full?'Pour /'+cidr+', clique à droite du dernier 1 de l’octet '+oct+'.'
        :'Pour /'+cidr+', clique après le '+remaining+'e bit de l’octet '+(oct+1)+'.';
      host.append(el('p','pepette-hint',msg));
@@ -159,7 +156,7 @@ if(host&&launch){
     cidrTable.addEventListener('pointercancel',e=>{if(drag&&e.pointerId===drag.id){cidrBits=drag.original;drag=null;render();}});
     const count=cidrBits.filter(Boolean).length,correct=cidrBits.every((v,k)=>v===(k<Number(cidr)));
     host.append(el('p','pepette-total','Bits réseau à 1 : '+count+' / '+cidr));
-    if(correct){host.append(el('p','pepette-success','Bravo ! Tu as placé les '+cidr+' bits réseau.'));host.append(button('Valider la ligne CIDR',()=>{stage='bar';barPosition=null;barHint=0;barFeedback='';render();}));}
+    if(correct){host.append(el('p','pepette-success','Bravo ! Tu as placé les '+cidr+' bits réseau.'));host.append(button('Placer la barre CIDR',()=>{stage='bar';barPosition=null;barHint=0;barFeedback='';render();}));}
     else{
      host.append(el('p','pepette-guidance','Clique sur les cases ou maintiens le clic et glisse pour remplir plusieurs bits. Un second clic retire un 1.'));
      host.append(button('Un indice',()=>{hint=Math.min(hint+1,3);render();}));
