@@ -74,6 +74,17 @@ if(host&&launch){
     }
     cidrLine.append(row);part.append(cidrLine);
    }
+   if(stage==='ip'&&i===octet){
+    const sum=weights.reduce((total,w,j)=>total+(bits[i][j]?w:0),0);
+    if(sum===value){
+     const next=button(i===3?'Ligne suivante : CIDR':'Octet suivant',()=>{
+      if(i===3)stage='cidr';else octet++;
+      hint=0;render();
+     });
+     next.classList.add('pepette-octet-next');
+     part.append(next);
+    }
+   }
    table.append(part);
   });
   host.append(table);
@@ -120,7 +131,7 @@ if(host&&launch){
   host.append(el('p','pepette-total','Total de mes bits à 1 : '+sum+' / '+octets[octet]));
   if(ok){
    host.append(el('p','pepette-success','Bravo ! Tu as trouvé '+octets[octet]+'.'));
-   host.append(button(octet===3?'Ligne suivante : CIDR':'Octet suivant',()=>{if(octet===3)stage='cidr';else octet++;hint=0;render();}));
+
   }else{
    host.append(el('p','pepette-guidance','Clique sur les cases pour placer les 1. Les cases vides valent 0.'));
    host.append(button('Un indice',()=>{hint=Math.min(hint+1,3);render();}));
