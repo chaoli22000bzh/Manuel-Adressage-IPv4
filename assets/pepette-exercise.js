@@ -73,7 +73,7 @@ if(host&&launch){
    const vals=el('div','pepette-bits');
    weights.forEach(w=>vals.append(el('span','pepette-weight',String(w))));
    part.append(vals);
-   const ipLine=el('div','pepette-unified-line'+(stage==='ip'&&i===octet?' is-active':' is-complete'));
+   const ipLine=el('div','pepette-unified-line'+(stage==='ip'?(i===octet?' is-active':' is-current-row'):' is-complete'));
    if(i===0)ipLine.append(el('span','pepette-line-label'+(stage==='ip'?' is-current-label':''),'IPv4'));
    const ipRow=el('div','pepette-bits');
    weights.forEach((w,j)=>{
@@ -86,7 +86,7 @@ if(host&&launch){
    });
    ipLine.append(ipRow);part.append(ipLine);
    if(stage!=='ip'){
-    const cidrLine=el('div','pepette-unified-line'+(stage==='cidr'?' is-active':' is-complete'));
+    const cidrLine=el('div','pepette-unified-line'+(stage==='cidr'?(i===0?' is-active':' is-current-row'):' is-complete'));
     if(i===0)cidrLine.append(el('span','pepette-line-label'+(stage==='cidr'||stage==='bar'?' is-current-label':''),'CIDR /'+cidr));
     const row=el('div','pepette-bits');
     for(let j=0;j<8;j++){
@@ -119,7 +119,7 @@ if(host&&launch){
     part.append(cidrLine);
    }
    if(['network','first','last','broadcast','review','finished'].includes(stage)){
-    const networkLine=el('div','pepette-unified-line'+(stage==='network'&&i===networkOctet?' is-active':' is-complete'));
+    const networkLine=el('div','pepette-unified-line'+(stage==='network'?(i===networkOctet?' is-active':' is-current-row'):' is-complete'));
     if(i===0)networkLine.append(el('span','pepette-line-label'+(stage==='network'?' is-current-label':''),'Réseau'));
     const networkRow=el('div','pepette-bits');
     weights.forEach((w,j)=>{
@@ -148,7 +148,7 @@ if(host&&launch){
    if(['first','last','broadcast','review','finished'].includes(stage)){
     for(const kind of kinds){
      if(!['review','finished'].includes(stage)&&kinds.indexOf(kind)>kinds.indexOf(stage))break;
-     const line=el('div','pepette-unified-line'+(stage===kind&&i===extraOctet?' is-active':' is-complete'));
+     const line=el('div','pepette-unified-line'+(stage===kind?(i===extraOctet?' is-active':' is-current-row'):' is-complete'));
      if(i===0)line.append(el('span','pepette-line-label'+(stage===kind?' is-current-label':''),labels[kind]));
      const row=el('div','pepette-bits');
      weights.forEach((w,j)=>{
