@@ -287,7 +287,7 @@ if(host&&launch){
    }else if(stage==='finished'){
     host.append(el('p','pepette-success','Bravo ! Tu as terminé et vérifié ton tableau en binaire.'));
     host.append(button('Nouvelle adresse',()=>{example=(example+1)%examples.length;start();}));
-    host.append(button('Revenir aux choix',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+    host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
    }else if(stage==='cidr'){
     let drag=null;
     const paint=(start,end,value)=>{
@@ -345,5 +345,103 @@ if(host&&launch){
    }
   }
  }
- launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();});
+
+ // Niveau 3 : travail autonome, tableau entier et correction finale non modifiable.
+ const challengePrefixes=[2,3,4,5,6,11,12,13,14,19,20,21,22,27,28,29,30];
+ let challengeAddress='',challengeBits={},challengeBar=null,challengeLocked=false,challengeResult=null;
+ const challengeRows=['ip','cidr','network','first','last','broadcast'];
+ const challengeNames={ip:'IPv4',cidr:'CIDR',network:'Réseau',first:'1re IP',last:'Dernière IP',broadcast:'Broadcast'};
+ const challengeEmpty=()=>Array(32).fill(false);
+ function newChallenge(){
+  const count=n=>n.toString(2).split('1').length-1;
+  const pools=[[],[],[],[]];
+  for(let v=1;v<=255;v++){
+   if(count(v)<4||count(v)>7)continue;
+   if(v<=223)pools[0].push(v);
+   for(let j=1;j<4;j++)pools[j].push(v);
+  }
+  let octs;
+  do{octs=pools.map(p=>p[Math.floor(Math.random()*p.length)]);}while(new Set(octs).size!==4||octs[0]>=224);
+  const prefix=challengePrefixes[Math.floor(Math.random()*challengePrefixes.length)];
+  challengeAddress=octs.join('.')+'/'+prefix;
+  challengeBits=Object.fromEntries(challengeRows.map(k=>[k,challengeEmpty()]));
+  challengeBar=null;challengeLocked=false;challengeResult=null;
+  stage='challenge';host.hidden=false;renderChallenge();
+  host.scrollIntoView({behavior:'smooth',block:'start'});
+ }
+ function challengeExpected(){
+  const [ip,p]=challengeAddress.split('/'),prefix=Number(p),octs=ip.split('.').map(Number);
+  const address=octs.reduce((n,v)=>((n*256)+v)>>>0,0);
+  const mask=(0xffffffff<<(32-prefix))>>>0;
+  const network=(address&mask)>>>0,broadcast=(network|(~mask))>>>0;
+  const bits=n=>Array.from({length:32},(_,i)=>Boolean((n>>>(31-i))&1));
+  return {ip:bits(address),cidr:bits(mask),network:bits(network),first:bits((network+1)>>>0),last:bits((broadcast-1)>>>0),broadcast:bits(broadcast)};
+ }
+ function renderChallenge(){
+  host.replaceChildren();
+  const [ip,prefixText]=challengeAddress.split('/'),prefix=Number(prefixText),octs=ip.split('.').map(Number),expected=challengeExpected();
+  const header=el('div','pepette-exercise-header'),heading=el('div','pepette-exercise-heading');
+  heading.append(el('h3',null,'Tableau en binaire - Je relève le défi'),el('p',null,'Adresse : '+challengeAddress));
+  const instruction=el('div','pepette-step-instruction');
+  instruction.append(el('strong',null,challengeLocked?'Correction de ton tableau.':'Complète les six lignes du tableau.'));
+  instruction.append(el('p',null,challengeLocked?'Tes réponses sont figées. Les cases incorrectes sont indiquées en rouge.':'Tu peux travailler dans l’ordre que tu veux. Les cases vides valent 0.'));
+  instruction.append(el('p',null,challengeLocked?'':'Place aussi la barre CIDR. Vérifie tout ton travail à la fin.'));
+  heading.append(instruction);header.append(heading);host.append(header);
+  const table=el('div','pepette-octets pepette-unified-grid pepette-challenge-grid');
+  for(let i=0;i<4;i++){
+   const part=el('section','pepette-octet pepette-unified-octet');
+   part.append(el('strong',null,'Octet '+(i+1)+' : '+octs[i]));
+   const powers=el('div','pepette-bits');weights.forEach((w,j)=>{const p=el('span','pepette-power');p.append(document.createTextNode('2'),el('sup',null,String(7-j)));powers.append(p);});part.append(powers);
+   const vals=el('div','pepette-bits');weights.forEach(w=>vals.append(el('span','pepette-weight',String(w))));part.append(vals);
+   for(const kind of challengeRows){
+    const line=el('div','pepette-unified-line is-current-row');
+    if(i===0)line.append(el('span','pepette-line-label',challengeNames[kind]+(kind==='cidr'?' /'+prefix:'')));
+    const row=el('div','pepette-bits');
+    for(let j=0;j<8;j++){
+     const index=i*8+j,on=challengeBits[kind][index],correct=expected[kind][index];
+     const cell=el('button','pepette-bit'+(on?' is-one':''),on?'1':'');
+     cell.type='button';cell.disabled=challengeLocked;
+     cell.setAttribute('aria-label',challengeNames[kind]+', octet '+(i+1)+', bit '+(j+1)+', '+(on?'1':'0'));
+     cell.setAttribute('aria-pressed',String(on));
+     if(challengeLocked&&on!==correct){cell.classList.add('challenge-error');cell.title='Attendu : '+(correct?'1':'0');cell.textContent=(on?'1':'0')+' → '+(correct?'1':'0');}
+     if(challengeLocked&&on===correct)cell.classList.add('challenge-correct');
+     if(!challengeLocked)cell.addEventListener('click',()=>{challengeBits[kind][index]=!challengeBits[kind][index];renderChallenge();});
+     if(challengeBar!==null&&challengeBar===index+1&&kind!=='ip')cell.classList.add('pepette-bar-anchor');
+     row.append(cell);
+    }
+    line.append(row);part.append(line);
+   }
+   table.append(part);
+  }
+  host.append(table);
+  if(!challengeLocked){
+   const bar=el('div','pepette-challenge-bar');
+   bar.append(el('strong',null,'Barre CIDR : '+(challengeBar===null?'non placée':'après le bit '+challengeBar)));
+   bar.append(el('p',null,'Choisis la position de la barre après un bit :'));
+   const choices=el('div','pepette-challenge-positions');
+   for(let n=1;n<=31;n++){
+    const b=button(String(n),()=>{challengeBar=n;renderChallenge();});
+    if(challengeBar===n)b.classList.add('is-selected');
+    b.setAttribute('aria-pressed',String(challengeBar===n));
+    choices.append(b);
+   }
+   bar.append(choices);host.append(bar);
+   const verify=button('Vérifier mon tableau',()=>{
+    const missing=challengeBar===null;
+    if(missing){host.querySelector('.pepette-challenge-bar')?.scrollIntoView({behavior:'smooth',block:'center'});return;}
+    const errors=challengeRows.reduce((n,k)=>n+challengeBits[k].filter((v,i)=>v!==expected[k][i]).length,0);
+    challengeResult={errors,barCorrect:challengeBar===prefix};
+    challengeLocked=true;renderChallenge();
+   });
+   host.append(verify);
+  }else{
+   const message=challengeResult.errors===0&&challengeResult.barCorrect?'Bravo ! Ton tableau est entièrement correct.':'Résultat : '+challengeResult.errors+' bit(s) incorrect(s). '+(challengeResult.barCorrect?'Barre CIDR correcte.':'Barre CIDR incorrecte : position attendue '+prefix+'.');
+   host.append(el('p',challengeResult.errors===0&&challengeResult.barCorrect?'pepette-success':'pepette-hint',message));
+   host.append(el('p','pepette-hint','Dans les cases rouges, la valeur attendue est indiquée après la flèche.'));
+   host.append(button('Nouvelle adresse',newChallenge));
+   host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+  }
+ }
+
+ launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='3')newChallenge();});
 }
