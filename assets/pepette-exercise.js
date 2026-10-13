@@ -601,7 +601,7 @@ if(host&&launch){
     for(let j=0;j<8;j++){
      const one=Boolean((expected[kind][o]>>(7-j))&1);
      const cell=el('span','pepette-bit',one?'1':'');
-     cell.style.cssText='display:flex;align-items:center;justify-content:center;background:'+(one?'#d7dee9':'#fff')+';color:#243247;font-weight:600;box-sizing:border-box;min-width:0;';
+     cell.style.cssText='display:flex;align-items:center;justify-content:center;background:'+(one&&decimalLevel===1?'#d7dee9':'#fff')+';color:#243247;font-weight:600;box-sizing:border-box;min-width:0;';
      bits.append(cell);
     }
     line.append(bits);part.append(line);
