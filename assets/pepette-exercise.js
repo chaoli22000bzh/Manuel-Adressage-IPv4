@@ -4,17 +4,32 @@ import { binaryOctets } from './ipv4-engine.js';
 const host=document.getElementById('pepette-exercise');
 const launch=document.getElementById('launch-training');
 if(host&&launch){
- const examples=['192.168.1.1','192.168.0.1'];
+ const examples=['10.11.12.13/8','172.16.1.1/16','192.168.1.1/24','10.1.2.3/8','172.16.2.1/16','192.168.0.1/24'];
  const weights=[128,64,32,16,8,4,2,1];
- let example=0,octet=0,bits=Array.from({length:4},()=>Array(8).fill(false)),hint=0,done=false;
+ let example=0,octet=0,bits=Array.from({length:4},()=>Array(8).fill(false)),hint=0,done=false,showCourseHelp=false;
  const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
  const button=(label,fn)=>{const b=el('button','pepette-action',label);b.type='button';b.addEventListener('click',fn);return b;};
- function start(){octet=0;hint=0;done=false;bits=Array.from({length:4},()=>Array(8).fill(false));host.hidden=false;render();host.scrollIntoView({behavior:'smooth',block:'start'});}
+ function start(){octet=0;hint=0;done=false;showCourseHelp=false;bits=Array.from({length:4},()=>Array(8).fill(false));host.hidden=false;render();host.scrollIntoView({behavior:'smooth',block:'start'});}
  function render(){
   host.replaceChildren();
-  const ip=examples[example],octets=ip.split('.').map(Number),expected=binaryOctets(ip);
-  host.append(el('h3',null,'Tableau en binaire - Avec Pépette'),el('p',null,'Adresse : '+ip+'/24'));
+  const [ip,cidr]=examples[example].split('/'),octets=ip.split('.').map(Number),expected=binaryOctets(ip);
+  host.append(el('h3',null,'Tableau en binaire - Avec Pépette'),el('p',null,'Adresse : '+ip+'/'+cidr));
   host.append(el('p','pepette-progress',done?'Première ligne terminée !':'Adresse IPv4 - octet '+(octet+1)+' sur 4'));
+  const courseHelp=el('div','pepette-course-help');
+  const helpToggle=button(showCourseHelp?'Masquer le coup de patte de Pépette':'🐾 Revoir le binaire avec Pépette',()=>{showCourseHelp=!showCourseHelp;render();});
+  helpToggle.setAttribute('aria-expanded',String(showCourseHelp));
+  courseHelp.append(helpToggle);
+  if(showCourseHelp){
+   const original=document.querySelector('#binary-help-panel .binary-help-content');
+   if(original){
+    const copied=original.cloneNode(true);
+    copied.querySelectorAll('.binary-reference').forEach(n=>n.remove());
+    courseHelp.append(copied);
+    const note=el('p',null,'Pour consulter aussi le tableau de conversion de 0 à 255, retrouve le coup de patte de Pépette dans le cours, section 1.1.');
+    courseHelp.append(note);
+   }
+  }
+  host.append(courseHelp);
   const table=el('div','pepette-octets');
   octets.forEach((value,i)=>{
    const part=el('section','pepette-octet'+(i===octet&&!done?' is-active':''));
