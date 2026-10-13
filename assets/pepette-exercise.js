@@ -461,7 +461,6 @@ if(host&&launch){
     if(!drag||e.pointerId!==drag.id)return;
     drag=null;renderChallenge();
    });
-  }
    const bar=el('div','pepette-challenge-bar');
    bar.append(el('strong',null,'Barre CIDR : '+(challengeBar===null?'non placée':'après le bit '+challengeBar)));
    bar.append(el('p',null,'Place la barre CIDR : clique sur le numéro du bit situé juste à gauche de la barre.'));
