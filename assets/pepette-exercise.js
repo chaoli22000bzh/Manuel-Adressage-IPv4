@@ -788,32 +788,46 @@ if(host&&launch){
   last.setAttribute('aria-label','Dernier terme, signe compris (par exemple -2)');
   last.inputMode='text';
   last.style.width='76px';
-  form.append(power,last);host.append(form);
+  form.append(el('span',null,'Nb hôtes ='),power,last);
+  const expectedExponent=32-hostsExpertPrefix;
+  const needsResult=expectedExponent<=8;
+  let numericResult=null;
+  if(needsResult){
+   form.append(el('span',null,'='));
+   numericResult=field('Résultat numérique',95);
+   numericResult.inputMode='numeric';
+   form.append(numericResult);
+  }
+  host.append(form);
   if(hostsExpertChecked&&hostsExpertValues){
    base.value=hostsExpertValues.base;exponent.value=hostsExpertValues.exponent;
    last.value=hostsExpertValues.last;
-   for(const control of [base,exponent,last])control.disabled=true;
-   const expectedExponent=32-hostsExpertPrefix;
+   if(numericResult)numericResult.value=hostsExpertValues.result;
+   for(const control of [base,exponent,last,numericResult].filter(Boolean))control.disabled=true;
    const correctBase=base.value.trim()==='2',correctExp=exponent.value.trim()===String(expectedExponent);
    const correctLast=last.value.trim().replace(/\s+/g,'').replace('−','-')==='-2';
-   const correct=correctBase&&correctExp&&correctLast;
+   const expectedCount=2**expectedExponent-2;
+   const correctResult=!needsResult||numericResult.value.trim().replace(/[\\s\\u00a0\\u202f]/g,'')===String(expectedCount);
+   const correct=correctBase&&correctExp&&correctLast&&correctResult;
    const msg=el('div','pepette-hosts-expert-feedback');
    if(correct){
     msg.append(el('p','pepette-success','Bravo ! Tu as trouvé la bonne formule.'));
-    const count=2**expectedExponent-2;
+    const count=expectedCount;
     msg.append(el('p',null,'Tu peux donc attribuer une adresse IP à '+count.toLocaleString('fr-FR')+' équipements sur ce réseau, par exemple des ordinateurs, des serveurs, des imprimantes ou du matériel réseau.'));
    }else{
     msg.append(el('p','pepette-hint','Cette formule n’est pas correcte. Voici ce qu’il faut revoir :'));
     if(!correctBase||!correctExp)msg.append(el('p',null,'Vérifie la puissance de 2 : la base est 2 et l’exposant correspond aux bits disponibles pour les hôtes (32 moins le CIDR).'));
     if(!correctLast)msg.append(el('p',null,'Pense aux deux adresses qu’on ne peut pas attribuer : l’adresse du réseau et l’adresse de broadcast. Il faut les retirer du total.'));
+    if(!correctResult)msg.append(el('p',null,'Vérifie ton calcul numérique : calcule la puissance de 2, puis retire les deux adresses réservées.'));
     const solution=el('p');solution.append('Formule attendue : 2');
     const solSup=document.createElement('sup');solSup.textContent=String(expectedExponent);solution.append(solSup,' − 2');
+    if(needsResult)solution.append(' = '+expectedCount.toLocaleString('fr-FR'));
     msg.append(solution);
    }
    host.append(msg);
   }else{
    host.append(button('Vérifier',()=>{
-    hostsExpertValues={base:base.value,exponent:exponent.value,last:last.value};
+    hostsExpertValues={base:base.value,exponent:exponent.value,last:last.value,result:numericResult?numericResult.value:''};
     hostsExpertChecked=true;renderHostsExpert();
    }));
   }
