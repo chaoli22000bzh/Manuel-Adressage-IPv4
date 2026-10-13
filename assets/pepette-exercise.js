@@ -785,20 +785,18 @@ if(host&&launch){
   const power=el('span');power.style.cssText='display:inline-flex;align-items:flex-start';
   const sup=document.createElement('sup');sup.style.cssText='font-size:.7em;position:relative;top:-.2em';sup.append(exponent);
   power.append(base,sup);
-  const operation=document.createElement('select');operation.setAttribute('aria-label','Opération');
-  operation.style.cssText='font:inherit;padding:5px;border:2px solid #9ca3af;border-radius:5px';
-  for(const [value,label] of [['','?'],['+','+'],['-','−'],['×','×'],['÷','÷']]){
-   const option=document.createElement('option');option.value=value;option.textContent=label;operation.append(option);
-  }
-  form.append(power,operation,last);host.append(form);
+  last.setAttribute('aria-label','Dernier terme, signe compris (par exemple -2)');
+  last.inputMode='text';
+  last.style.width='76px';
+  form.append(power,last);host.append(form);
   if(hostsExpertChecked&&hostsExpertValues){
    base.value=hostsExpertValues.base;exponent.value=hostsExpertValues.exponent;
-   operation.value=hostsExpertValues.operation;last.value=hostsExpertValues.last;
-   for(const control of [base,exponent,operation,last])control.disabled=true;
+   last.value=hostsExpertValues.last;
+   for(const control of [base,exponent,last])control.disabled=true;
    const expectedExponent=32-hostsExpertPrefix;
    const correctBase=base.value.trim()==='2',correctExp=exponent.value.trim()===String(expectedExponent);
-   const correctOp=operation.value==='-',correctLast=last.value.trim()==='2';
-   const correct=correctBase&&correctExp&&correctOp&&correctLast;
+   const correctLast=last.value.trim().replace(/\s+/g,'').replace('−','-')==='-2';
+   const correct=correctBase&&correctExp&&correctLast;
    const msg=el('div','pepette-hosts-expert-feedback');
    if(correct){
     msg.append(el('p','pepette-success','Bravo ! Tu as trouvé la bonne formule.'));
@@ -807,7 +805,7 @@ if(host&&launch){
    }else{
     msg.append(el('p','pepette-hint','Cette formule n’est pas correcte. Voici ce qu’il faut revoir :'));
     if(!correctBase||!correctExp)msg.append(el('p',null,'Vérifie la puissance de 2 : la base est 2 et l’exposant correspond aux bits disponibles pour les hôtes (32 moins le CIDR).'));
-    if(!correctOp||!correctLast)msg.append(el('p',null,'Pense aux deux adresses qu’on ne peut pas attribuer : l’adresse du réseau et l’adresse de broadcast. Il faut les retirer du total.'));
+    if(!correctLast)msg.append(el('p',null,'Pense aux deux adresses qu’on ne peut pas attribuer : l’adresse du réseau et l’adresse de broadcast. Il faut les retirer du total.'));
     const solution=el('p');solution.append('Formule attendue : 2');
     const solSup=document.createElement('sup');solSup.textContent=String(expectedExponent);solution.append(solSup,' − 2');
     msg.append(solution);
@@ -815,7 +813,7 @@ if(host&&launch){
    host.append(msg);
   }else{
    host.append(button('Vérifier',()=>{
-    hostsExpertValues={base:base.value,exponent:exponent.value,operation:operation.value,last:last.value};
+    hostsExpertValues={base:base.value,exponent:exponent.value,last:last.value};
     hostsExpertChecked=true;renderHostsExpert();
    }));
   }
