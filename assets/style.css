@@ -257,3 +257,11 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .pepette-bar-target:hover,.pepette-bar-target:focus-visible{background:rgba(37,99,235,.25);outline:1px dashed #2563eb}
 .pepette-bar-anchor{border-right:3px solid #dc2626!important;border-top-right-radius:0;border-bottom-right-radius:0}
 .pepette-bar-target.is-selected{border-right:3px solid #dc2626;background:rgba(220,38,38,.10)}
+
+/* V0.3.51 - Tableau compact : etiquettes dans la marge gauche. */
+.pepette-unified-grid{padding-left:66px}
+.pepette-unified-octet{padding-bottom:4px}
+.pepette-unified-line,.pepette-unified-octet:not(:first-child) .pepette-unified-line{padding:3px 1px;margin-top:3px}
+.pepette-unified-line .pepette-line-label{position:absolute;left:-67px;top:50%;transform:translateY(-50%);width:61px;margin:0;text-align:right;font-size:11px;white-space:nowrap}
+.pepette-unified-line .pepette-bit{min-height:27px}
+@media(max-width:650px){.pepette-unified-grid{padding-left:52px}.pepette-unified-line .pepette-line-label{left:-53px;width:47px;font-size:9px}.pepette-unified-line,.pepette-unified-octet:not(:first-child) .pepette-unified-line{padding:3px 1px}}
