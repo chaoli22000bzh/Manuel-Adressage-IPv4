@@ -16,7 +16,7 @@ if(host&&launch){
   const header=el('div','pepette-exercise-header');
   const heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Tableau en binaire - Avec Pépette'),el('p',null,'Adresse : '+ip+'/'+cidr));
-  heading.append(el('p','pepette-progress',stage==='ip'?'Adresse IPv4 - octet '+(octet+1)+' sur 4':stage==='cidr'?'Ligne CIDR - place les bits réseau à 1':stage==='bar'?'Place la barre de séparation réseau / hôte':'Lignes IPv4, CIDR et barre terminées !'));
+  heading.append(el('p','pepette-progress',stage==='ip'?'Adresse IPv4 - octet '+(octet+1)+' sur 4':stage==='cidr'?'Ligne CIDR - place les bits réseau à 1':stage==='bar'?'Je sépare les bits du réseau et ceux des machines':'Lignes IPv4, CIDR et barre terminées !'));
   const helpToggle=button(showCourseHelp?'Masquer le coup de patte de Pépette':'Revoir le binaire avec Pépette',()=>{showCourseHelp=!showCourseHelp;render();});
   helpToggle.setAttribute('aria-expanded',String(showCourseHelp));
   header.append(heading,helpToggle);
@@ -64,7 +64,7 @@ if(host&&launch){
    });
    ipLine.append(ipRow);part.append(ipLine);
    if(stage!=='ip'){
-    const cidrLine=el('div','pepette-unified-line'+((stage==='cidr'||stage==='bar')?' is-active':' is-complete'));
+    const cidrLine=el('div','pepette-unified-line'+(stage==='cidr'?' is-active':' is-complete'));
     if(i===0)cidrLine.append(el('span','pepette-line-label','CIDR /'+cidr));
     const row=el('div','pepette-bits');
     for(let j=0;j<8;j++){
@@ -113,7 +113,7 @@ if(host&&launch){
   if(stage!=='ip'){
    const cidrTable=table;
    if(stage==='bar'){
-    host.append(el('p','pepette-guidance','Clique sur la séparation située après le dernier bit réseau. Tu peux déplacer la barre avant de la valider.'));
+    host.append(el('p','pepette-guidance','La barre verticale sert à séparer les bits du réseau (à gauche) et les bits des machines (à droite). Avec /'+cidr+', les '+cidr+' premiers bits appartiennent au réseau. Clique juste après le dernier bit du réseau pour placer la barre. Tu peux la déplacer avant de valider.'));
     if(barPosition!==null)host.append(el('p','pepette-total','Barre placée après le bit '+barPosition+'.'));
     host.append(button('Vérifier la barre',()=>{
      if(barPosition===Number(cidr)){stage='finished';barFeedback='';}
@@ -122,7 +122,7 @@ if(host&&launch){
     }));
     host.append(button('Un indice',()=>{barHint=Math.min(3,barHint+1);render();}));
     if(barFeedback)host.append(el('p','pepette-hint',barFeedback));
-    if(barHint)host.append(el('p','pepette-hint',barHint===1?'Le /'+cidr+' indique le nombre de bits réseau.':barHint===2?'Compte '+cidr+' bits en partant de la gauche. La barre se place juste après le dernier.':'Chaque octet contient 8 bits. Pour /'+cidr+', la barre est après le bit '+cidr+'.'));
+    if(barHint)host.append(el('p','pepette-hint',barHint===1?(Number(cidr)%8===0?'Chaque octet contient 8 bits. Combien d’octets faut-il pour obtenir '+cidr+' bits ?':'Chaque octet contient 8 bits. Compte les octets complets, puis les bits restants.'):barHint===2?(Number(cidr)%8===0?'Avec /'+cidr+', la partie réseau occupe les '+(Number(cidr)/8)+' premiers octets.':'Avec /'+cidr+', compte '+Math.floor(Number(cidr)/8)+' octets complets et encore '+(Number(cidr)%8)+' bits dans le suivant.'):(Number(cidr)%8===0?'Place la barre à la fin de l’octet '+(Number(cidr)/8)+', juste avant l’octet suivant.':'Place la barre après le '+(Number(cidr)%8)+'e bit de l’octet '+(Math.floor(Number(cidr)/8)+1)+'.')));
    }else if(stage==='cidr'){
     let drag=null;
     const paint=(start,end,value)=>{
