@@ -348,21 +348,25 @@ if(host&&launch){
 
  // Niveau 3 : travail autonome, tableau entier et correction finale non modifiable.
  const challengePrefixes=[2,3,4,5,6,11,12,13,14,19,20,21,22,27,28,29,30];
+ const intermediatePrefixes=[7,9,10,15,17,18,23,25,26];
+ let intermediate=false,intermediateStep=0,intermediateHint=false,intermediateErrors=null;
  let challengeAddress='',challengeBits={},challengeBar=null,challengeLocked=false,challengeResult=null;
  const challengeRows=['ip','cidr','network','first','last','broadcast'];
  const challengeNames={ip:'IPv4',cidr:'CIDR',network:'Réseau',first:'1re IP',last:'Dernière IP',broadcast:'Broadcast'};
  const challengeEmpty=()=>Array(32).fill(false);
- function newChallenge(){
+ function newChallenge(mode=intermediate){
+  intermediate=mode;intermediateStep=0;intermediateHint=false;intermediateErrors=null;
   const count=n=>n.toString(2).split('1').length-1;
   const pools=[[],[],[],[]];
   for(let v=1;v<=255;v++){
-   if(count(v)<4||count(v)>7)continue;
+   if(count(v)<(intermediate?2:4)||count(v)>(intermediate?5:7))continue;
    if(v<=223)pools[0].push(v);
    for(let j=1;j<4;j++)pools[j].push(v);
   }
   let octs;
   do{octs=pools.map(p=>p[Math.floor(Math.random()*p.length)]);}while(new Set(octs).size!==4||octs[0]>=224);
-  const prefix=challengePrefixes[Math.floor(Math.random()*challengePrefixes.length)];
+  const prefixes=intermediate?intermediatePrefixes:challengePrefixes;
+  const prefix=prefixes[Math.floor(Math.random()*prefixes.length)];
   challengeAddress=octs.join('.')+'/'+prefix;
   challengeBits=Object.fromEntries(challengeRows.map(k=>[k,challengeEmpty()]));
   challengeBar=null;challengeLocked=false;challengeResult=null;
@@ -381,11 +385,18 @@ if(host&&launch){
   host.replaceChildren();
   const [ip,prefixText]=challengeAddress.split('/'),prefix=Number(prefixText),octs=ip.split('.').map(Number),expected=challengeExpected();
   const header=el('div','pepette-exercise-header'),heading=el('div','pepette-exercise-heading');
-  heading.append(el('h3',null,'Tableau en binaire - Je relève le défi'),el('p',null,'Adresse : '+challengeAddress));
+  heading.append(el('h3',null,'Tableau en binaire - '+(intermediate?'Je me débrouille':'Je relève le défi')),el('p',null,'Adresse : '+challengeAddress));
   const instruction=el('div','pepette-step-instruction');
-  instruction.append(el('strong',null,challengeLocked?'Correction de ton tableau.':'Complète les six lignes du tableau.'));
-  instruction.append(el('p',null,challengeLocked?'Tes réponses sont figées. Les erreurs sont indiquées en rouge.':'Tu peux travailler dans l’ordre que tu veux. Une case vide représente un bit à 0.'));
-  instruction.append(el('p',null,challengeLocked?'':'Place aussi la barre CIDR. Vérifie tout ton travail à la fin.'));
+  if(intermediate){
+   const kind=challengeRows[intermediateStep];
+   instruction.append(el('strong',null,intermediateStep===6?'Tableau terminé !':'Complète la ligne '+challengeNames[kind]+'.'));
+   instruction.append(el('p',null,intermediateStep===6?'Toutes les lignes sont validées.':'Remplis les 32 bits, puis vérifie ta ligne.'));
+   if(intermediateStep<6)instruction.append(el('p',null,'Une case vide représente un bit à 0.'));
+  }else{
+   instruction.append(el('strong',null,challengeLocked?'Correction de ton tableau.':'Complète les six lignes du tableau.'));
+   instruction.append(el('p',null,challengeLocked?'Tes réponses sont figées. Les erreurs sont indiquées en rouge.':'Tu peux travailler dans l’ordre que tu veux. Une case vide représente un bit à 0.'));
+   instruction.append(el('p',null,challengeLocked?'':'Place aussi la barre CIDR. Vérifie tout ton travail à la fin.'));
+  }
   heading.append(instruction);header.append(heading);host.append(header);
   const table=el('div','pepette-octets pepette-unified-grid pepette-challenge-grid');
   for(let i=0;i<4;i++){
@@ -394,19 +405,21 @@ if(host&&launch){
    const powers=el('div','pepette-bits');weights.forEach((w,j)=>{const p=el('span','pepette-power');p.append(document.createTextNode('2'),el('sup',null,String(7-j)));powers.append(p);});part.append(powers);
    const vals=el('div','pepette-bits');weights.forEach(w=>vals.append(el('span','pepette-weight',String(w))));part.append(vals);
    for(const kind of challengeRows){
-    const line=el('div','pepette-unified-line is-current-row');
+    const active=!intermediate||challengeRows[intermediateStep]===kind;
+    const line=el('div','pepette-unified-line '+(active?'is-current-row':'is-complete'));
+    if(intermediate&&active)line.classList.add('is-active');
     if(i===0)line.append(el('span','pepette-line-label',challengeNames[kind]+(kind==='cidr'?' /'+prefix:'')));
     const row=el('div','pepette-bits');
     for(let j=0;j<8;j++){
      const index=i*8+j,on=challengeBits[kind][index],correct=expected[kind][index];
      const cell=el('button','pepette-bit'+(on?' is-one':''),on?'1':'');
-     cell.type='button';cell.disabled=challengeLocked;
+     cell.type='button';cell.disabled=challengeLocked||(intermediate&&challengeRows[intermediateStep]!==kind);
      cell.setAttribute('aria-label',challengeNames[kind]+', octet '+(i+1)+', bit '+(j+1)+', '+(on?'1':'0'));
      cell.setAttribute('aria-pressed',String(on));
-     if(challengeLocked&&on!==correct){cell.classList.add('challenge-error');cell.textContent=on?'1':'0';cell.setAttribute('aria-label',challengeNames[kind]+', bit '+(index+1)+', réponse '+(on?'1':'0')+', attendu '+(correct?'1':'0'));}
-     if(challengeLocked&&on===correct)cell.classList.add('challenge-correct');
+     if(!intermediate&&challengeLocked&&on!==correct){cell.classList.add('challenge-error');cell.textContent=on?'1':'0';cell.setAttribute('aria-label',challengeNames[kind]+', bit '+(index+1)+', réponse '+(on?'1':'0')+', attendu '+(correct?'1':'0'));}
+     if(!intermediate&&challengeLocked&&on===correct)cell.classList.add('challenge-correct');
      cell.dataset.challengeRow=kind;cell.dataset.challengeIndex=String(index);
-     if(!challengeLocked)cell.addEventListener('click',e=>{if(e.detail!==0)return;challengeBits[kind][index]=!challengeBits[kind][index];renderChallenge();});
+     if(!challengeLocked&&(!intermediate||challengeRows[intermediateStep]===kind))cell.addEventListener('click',e=>{if(e.detail!==0)return;challengeBits[kind][index]=!challengeBits[kind][index];renderChallenge();});
      if(challengeBar!==null&&challengeBar===index+1&&kind!=='ip')cell.classList.add('pepette-bar-anchor');
      row.append(cell);
     }
@@ -415,14 +428,14 @@ if(host&&launch){
    table.append(part);
   }
   host.append(table);
-  if(!challengeLocked){
+  if(!challengeLocked&&(!intermediate||intermediateStep<6)){
    // Peinture au passage : horizontal entre octets et vertical entre lignes.
    let drag=null;
    const cellAt=(x,y)=>document.elementFromPoint(x,y)?.closest('[data-challenge-row][data-challenge-index]');
    const mark=(cell)=>{
     if(!drag||!cell||!table.contains(cell))return;
     const kind=cell.dataset.challengeRow,index=Number(cell.dataset.challengeIndex);
-    if(!challengeRows.includes(kind)||!Number.isInteger(index)||index<0||index>31)return;
+    if(!challengeRows.includes(kind)||!Number.isInteger(index)||index<0||index>31||(intermediate&&kind!==challengeRows[intermediateStep]))return;
     const key=kind+':'+index;
     if(drag.visited.has(key))return;
     drag.visited.add(key);
@@ -440,7 +453,7 @@ if(host&&launch){
    };
    table.addEventListener('pointerdown',e=>{
     const cell=e.target.closest('[data-challenge-row][data-challenge-index]');
-    if(!cell||e.button!==0)return;
+    if(!cell||e.button!==0||(intermediate&&cell.dataset.challengeRow!==challengeRows[intermediateStep]))return;
     e.preventDefault();
     const kind=cell.dataset.challengeRow,index=Number(cell.dataset.challengeIndex);
     drag={id:e.pointerId,value:!challengeBits[kind][index],visited:new Set(),x:e.clientX,y:e.clientY};
@@ -461,6 +474,25 @@ if(host&&launch){
     if(!drag||e.pointerId!==drag.id)return;
     drag=null;renderChallenge();
    });
+   if(intermediate){
+    const kind=challengeRows[intermediateStep];
+    if(intermediateErrors!==null)host.append(el('p',intermediateErrors===0?'pepette-success':'pepette-hint',intermediateErrors===0?'Ligne correcte !':intermediateErrors+' bit(s) incorrect(s). Corrige puis vérifie à nouveau.'));
+    if(intermediateStep<6){
+     const clues={ip:'Utilise les valeurs 128, 64, 32, 16, 8, 4, 2 et 1.',cidr:'Compte les bits réseau depuis la gauche.',network:'Compare les bits IPv4 et CIDR.',first:'Pense au dernier bit de la partie hôte.',last:'Le dernier bit de la partie hôte reste à 0.',broadcast:'Tous les bits hôtes sont à 1.'};
+     host.append(button(intermediateHint?'Masquer l’indice':'Un indice',()=>{intermediateHint=!intermediateHint;renderChallenge();}));
+     if(intermediateHint)host.append(el('p','pepette-hint',clues[kind]));
+     host.append(button('Vérifier ma ligne',()=>{
+      intermediateErrors=challengeBits[kind].filter((v,i)=>v!==expected[kind][i]).length;
+      if(intermediateErrors===0){intermediateStep++;intermediateHint=false;intermediateErrors=null;}
+      renderChallenge();
+     }));
+    }else{
+     host.append(el('p','pepette-success','Bravo ! Tu as terminé les six lignes.'));
+     host.append(button('Nouvelle adresse',()=>newChallenge(true)));
+     host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+    }
+    return;
+   }
    const bar=el('div','pepette-challenge-bar');
    bar.append(el('strong',null,'Barre CIDR : '+(challengeBar===null?'non placée':'après le bit '+challengeBar)));
    bar.append(el('p',null,'Place la barre CIDR : clique sur le numéro du bit situé juste à gauche de la barre.'));
@@ -489,5 +521,5 @@ if(host&&launch){
   }
  }
 
- launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='3')newChallenge();});
+ launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);});
 }
