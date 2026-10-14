@@ -952,7 +952,7 @@ if(host&&launch){
   const finished=el('section','pepette-complete-finished');
   finished.style.marginBottom='28px';
   for(const child of Array.from(host.children)){
-   if(child.matches('button'))continue;
+   if(child.matches('button') || (child.matches('.pepette-success') && child.textContent.trim()==='Bravo ! Tu as terminé le tableau.'))continue;
    const copy=child.cloneNode(true);
    copy.querySelectorAll('button').forEach(button=>button.remove());
    copy.querySelectorAll('input').forEach(input=>{
