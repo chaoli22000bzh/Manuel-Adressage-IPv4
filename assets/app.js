@@ -132,8 +132,6 @@ for(const card of document.querySelectorAll('.decimal-step')){
 const trainingFold=document.getElementById('training-fold');
 if(trainingFold)trainingFold.addEventListener('toggle',()=>{if(trainingFold.open)requestAnimationFrame(()=>trainingFold.scrollIntoView({behavior:'smooth',block:'start'}));});
 
-// V0.3.99 - navigation indépendante cours / exercices.
-const chooseLearn=document.getElementById('choose-learn'),chooseTest=document.getElementById('choose-test');
-function chooseIpv4Space(mode){const learn=document.getElementById('fiche'),test=document.getElementById('ipv4-test-panel'),prompt=document.getElementById('ipv4-choice-prompt');if(!learn||!test)return;learn.hidden=mode!=='learn';test.hidden=mode!=='test';if(prompt)prompt.hidden=true;chooseLearn?.setAttribute('aria-pressed',String(mode==='learn'));chooseTest?.setAttribute('aria-pressed',String(mode==='test'));(mode==='learn'?learn:test).scrollIntoView({behavior:'smooth',block:'start'});}
-chooseLearn?.addEventListener('click',()=>chooseIpv4Space('learn'));chooseTest?.addEventListener('click',()=>chooseIpv4Space('test'));
-document.getElementById('go-training')?.addEventListener('click',()=>chooseIpv4Space('test'));
+// V0.3.100 - le cours et les quatre accordéons sont accessibles directement.
+const goTrainingShortcut=document.getElementById('go-training');
+if(goTrainingShortcut)goTrainingShortcut.addEventListener('click',()=>{const fold=document.getElementById('training-fold');if(!fold)return;fold.open=true;fold.scrollIntoView({behavior:'smooth',block:'start'});});
