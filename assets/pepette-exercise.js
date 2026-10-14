@@ -1,6 +1,14 @@
 // Prototype pedagogique Pépette : premiere ligne binaire, octet par octet.
 // Moteur IPCalc importe localement, aucun acces reseau.
-import { binaryOctets } from './ipv4-engine.js';
+import { binaryOctets, parseNetwork, numberToIPv4, ipv4ToNumber } from './ipv4-engine.js';
+// V0.3.106 - les réponses réseau des exercices binaires proviennent d'IPcalc.
+const binaryAddress = address => binaryOctets(address).join('').split('').map(bit => bit === '1');
+const binaryExerciseAnswers = address => {
+ const result = parseNetwork(address);
+ const first = numberToIPv4(result.network + 1);
+ const last = numberToIPv4(ipv4ToNumber(result.broadcast) - 1);
+ return {ip:binaryAddress(result.inputAddress),cidr:binaryAddress(result.mask),network:binaryAddress(result.address),first:binaryAddress(first),last:binaryAddress(last),broadcast:binaryAddress(result.broadcast)};
+};
 const host=document.getElementById('pepette-exercise');
 const launch=document.getElementById('launch-training');
 if(host&&launch){
@@ -14,11 +22,8 @@ if(host&&launch){
   host.replaceChildren();
   completeRestore();
   const [ip,cidr]=examples[example].split('/'),octets=ip.split('.').map(Number),expected=binaryOctets(ip);
-  const mask=(0xffffffff<<(32-Number(cidr)))>>>0;
-  const ipNumber=octets.reduce((n,v)=>((n*256)+v)>>>0,0);
-  const networkNumber=(ipNumber&mask)>>>0,broadcastNumber=(networkNumber|(~mask))>>>0;
-  const toOctets=n=>[24,16,8,0].map(shift=>(n>>>shift)&255);
-  const targets={first:toOctets((networkNumber+1)>>>0),last:toOctets((broadcastNumber-1)>>>0),broadcast:toOctets(broadcastNumber)};
+  const answers=binaryExerciseAnswers(examples[example]);
+  const targets=Object.fromEntries(['first','last','broadcast'].map(kind=>[kind,Array.from({length:4},(_,octet)=>parseInt(answers[kind].slice(octet*8,octet*8+8).map(bit=>bit?'1':'0').join(''),2))]));
   const kinds=['first','last','broadcast'],labels={first:'1re IP',last:'Dernière IP',broadcast:'Broadcast'};
   const header=el('div','pepette-exercise-header');
   const heading=el('div','pepette-exercise-heading');
@@ -376,12 +381,7 @@ if(host&&launch){
   host.scrollIntoView({behavior:'smooth',block:'start'});
  }
  function challengeExpected(){
-  const [ip,p]=challengeAddress.split('/'),prefix=Number(p),octs=ip.split('.').map(Number);
-  const address=octs.reduce((n,v)=>((n*256)+v)>>>0,0);
-  const mask=(0xffffffff<<(32-prefix))>>>0;
-  const network=(address&mask)>>>0,broadcast=(network|(~mask))>>>0;
-  const bits=n=>Array.from({length:32},(_,i)=>Boolean((n>>>(31-i))&1));
-  return {ip:bits(address),cidr:bits(mask),network:bits(network),first:bits((network+1)>>>0),last:bits((broadcast-1)>>>0),broadcast:bits(broadcast)};
+  return binaryExerciseAnswers(challengeAddress);
  }
  function renderChallenge(){
   host.replaceChildren();
