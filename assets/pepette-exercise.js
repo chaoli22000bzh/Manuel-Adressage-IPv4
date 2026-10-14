@@ -937,6 +937,7 @@ if(host&&launch){
     for(const control of [base,exponent,last,result].filter(Boolean))control.disabled=true;
     verify.disabled=true;
     if(completeMode&&completeLevel===2){
+     verify.remove();
      feedback.append(el('p','pepette-step-instruction','Bravo ! Tu as terminé ton exercice complet d’adressage IPv4.'));
      feedback.append(button('Nouvel exercice complet',completeMediumStart));
      feedback.append(button('Nouveau test',completeEnd));
