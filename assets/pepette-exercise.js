@@ -540,6 +540,15 @@ if(host&&launch){
     host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
    }
   }
+  // La derniere ligne validee ne doit pas masquer la navigation.
+  if(intermediate&&intermediateStep>=6){
+   host.append(el('p','pepette-success','Bravo ! Tu as terminé les six lignes.'));
+   if(completeMode&&completeLevel===2)host.append(button('Continuer vers le tableau décimal',completeMediumToDecimal));
+   else{
+    host.append(button('Nouvelle adresse',()=>newChallenge(true)));
+    host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   }
+  }
  }
 
 
