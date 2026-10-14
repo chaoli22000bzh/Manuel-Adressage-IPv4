@@ -385,6 +385,7 @@ if(host&&launch){
  }
  function renderChallenge(){
   host.replaceChildren();
+  completeRestore();
   const [ip,prefixText]=challengeAddress.split('/'),prefix=Number(prefixText),octs=ip.split('.').map(Number),expected=challengeExpected();
   const header=el('div','pepette-exercise-header'),heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Tableau en binaire - '+(intermediate?'Je me débrouille':'Je relève le défi')),el('p',null,'Adresse : '+challengeAddress));
@@ -530,8 +531,13 @@ if(host&&launch){
    const message=challengeResult.errors===0&&challengeResult.barCorrect?'Bravo ! Ton tableau est entièrement correct.':'Résultat : '+challengeResult.errors+' bit(s) incorrect(s). '+(challengeResult.barCorrect?'Barre CIDR correcte.':'Barre CIDR incorrecte : position attendue '+prefix+'.');
    host.append(el('p',challengeResult.errors===0&&challengeResult.barCorrect?'pepette-success':'pepette-hint',message));
 
-   host.append(button('Nouvelle adresse',newChallenge));
-   host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   if(completeMode&&completeLevel===3){
+    if(challengeResult.errors===0&&challengeResult.barCorrect)host.append(button('Continuer vers le tableau décimal',completeChallengeToDecimal));
+    else host.append(button('Corriger mon tableau',()=>{challengeLocked=false;challengeResult=null;renderChallenge();}));
+   }else{
+    host.append(button('Nouvelle adresse',newChallenge));
+    host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   }
   }
  }
 
@@ -680,7 +686,10 @@ if(host&&launch){
    else host.append(verifyButton);
   }else{
    host.append(el('p',decimalLocked&&decimalError?'pepette-hint':'pepette-success',decimalLocked?decimalError:'Bravo ! Tu as terminé le tableau.'));
-   if(completeMode)host.append(button('Continuer vers le calcul du nombre d’hôtes',completeToHosts));
+   if(completeMode){
+    if(decimalLevel===3&&decimalError.startsWith('Résultat :'))host.append(button('Corriger mon tableau',()=>{decimalLocked=false;decimalError='';renderDecimal();}));
+    else host.append(button('Continuer vers le calcul du nombre d’hôtes',completeToHosts));
+   }
    else{
     host.append(button('Nouvelle adresse',()=>decimalStart(decimalLevel)));
     host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
@@ -789,9 +798,10 @@ if(host&&launch){
  }
  function renderHostsExpert(){
   host.replaceChildren();
+  completeRestore();
   const heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Calcul du nombre d’hôtes - Je relève le défi'),
-   el('p',null,'Adresse IPv4 : 192.168.10.42/'+hostsExpertPrefix),
+   el('p',null,'Adresse IPv4 : '+(completeMode&&completeLevel===3?decimalAddress:'192.168.10.42/'+hostsExpertPrefix)),
    el('p',null,'Construis la formule du nombre d’hôtes utilisables. Une seule tentative par adresse.'));
   host.append(heading);
   const form=el('div','pepette-hosts-expert-form');
@@ -853,8 +863,18 @@ if(host&&launch){
    }));
   }
   if(hostsExpertChecked){
-   host.append(button('Nouvelle adresse',hostsExpertStart));
-   host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   if(completeMode&&completeLevel===3){
+    const v=hostsExpertValues;
+    const correct=v.base.trim()==='2'&&v.exponent.trim()===String(32-hostsExpertPrefix)&&v.last.trim().replace(/\s+/g,'').replace('−','-')==='-2'&&((32-hostsExpertPrefix)>8||v.result.trim().replace(/[\s\u00a0\u202f]/g,'')===String(2**(32-hostsExpertPrefix)-2));
+    if(correct){
+     host.append(el('p','pepette-step-instruction','Bravo ! Tu as terminé ton exercice complet d’adressage IPv4.'));
+     host.append(button('Nouvel exercice complet',completeChallengeStart));
+     host.append(button('Nouveau test',completeEnd));
+    }else host.append(button('Corriger mon calcul',()=>{hostsExpertChecked=false;renderHostsExpert();}));
+   }else{
+    host.append(button('Nouvelle adresse',hostsExpertStart));
+    host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   }
   }
  }
 
@@ -918,7 +938,7 @@ if(host&&launch){
 
 
  // Exercice complet : orchestration des trois interfaces originales, sans duplication.
- let completeMode=false,completeSnapshots=[];
+ let completeMode=false,completeLevel=1,completeSnapshots=[];
  function completeRestore(){
   if(!completeMode||!completeSnapshots.length)return;
   const fragment=document.createDocumentFragment();
@@ -932,7 +952,7 @@ if(host&&launch){
   next();
  }
  function completeStart(){
-  completeMode=true;completeSnapshots=[];
+  completeMode=true;completeLevel=1;completeSnapshots=[];
   // CIDR /24 : les quatre étapes du calcul guidé restent accessibles.
   example=[2,5][Math.floor(Math.random()*2)];
   start();
@@ -945,6 +965,18 @@ if(host&&launch){
    decimalValues=Object.fromEntries(decimalRows.map(k=>[k,Array(4).fill('')]));
    decimalStep=0;decimalError='';renderDecimal();
   });
+ }
+ function completeChallengeStart(){
+  completeMode=true;completeLevel=3;completeSnapshots=[];
+  newChallenge(false);
+ }
+ function completeChallengeToDecimal(){
+  const address=challengeAddress;
+  decimalStart(3);
+  decimalAddress=address;
+  decimalValues=Object.fromEntries(decimalRows.map(k=>[k,Array(4).fill('')]));
+  decimalStep=0;decimalLocked=false;decimalError='';decimalErrors={};
+  renderDecimal();
  }
  function completeToHosts(){
   // Reutiliser le rendu decimal valide : son tableau binaire de reference
@@ -964,14 +996,19 @@ if(host&&launch){
    finished.append(copy);
   }
   completeSnapshots=[finished];
-  hostsPrefix=Number(decimalAddress.split('/')[1]);
-  hostsStep=0;hostsError='';
-  renderHosts();
+  if(completeLevel===3){
+   hostsExpertPrefix=Number(decimalAddress.split('/')[1]);
+   hostsExpertChecked=false;hostsExpertValues=null;
+   renderHostsExpert();
+  }else{
+   hostsPrefix=Number(decimalAddress.split('/')[1]);
+   hostsStep=0;hostsError='';renderHosts();
+  }
  }
  function completeEnd(){
   completeMode=false;completeSnapshots=[];
   host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});
  }
 
- launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);else if(topic==='decimal'&&['1','2','3'].includes(level))decimalStart(Number(level));else if(topic==='hotes'&&level==='1')hostsStart();else if(topic==='hotes'&&level==='2')hostsMediumStart();else if(topic==='hotes'&&level==='3')hostsExpertStart();else if(topic==='complet'&&level==='1')completeStart();});
+ launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);else if(topic==='decimal'&&['1','2','3'].includes(level))decimalStart(Number(level));else if(topic==='hotes'&&level==='1')hostsStart();else if(topic==='hotes'&&level==='2')hostsMediumStart();else if(topic==='hotes'&&level==='3')hostsExpertStart();else if(topic==='complet'&&level==='1')completeStart();else if(topic==='complet'&&level==='3')completeChallengeStart();});
 }
