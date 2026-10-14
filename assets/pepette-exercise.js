@@ -583,12 +583,13 @@ if(host&&launch){
   stage='decimal';host.hidden=false;renderDecimal();
   host.scrollIntoView({behavior:'smooth',block:'start'});
  }
+ // V0.3.107 - les valeurs décimales proviennent du moteur IPv4 commun.
  function decimalExpected(){
-  const [ip,p]=decimalAddress.split('/'),prefix=Number(p),octs=ip.split('.').map(Number);
-  const address=octs.reduce((n,v)=>((n*256)+v)>>>0,0);
-  const mask=(0xffffffff<<(32-prefix))>>>0,network=(address&mask)>>>0,broadcast=(network|(~mask))>>>0;
-  const oct=n=>[24,16,8,0].map(shift=>(n>>>shift)&255);
-  return {ip:oct(address),cidr:oct(mask),network:oct(network),first:oct((network+1)>>>0),last:oct((broadcast-1)>>>0),broadcast:oct(broadcast)};
+  const result=parseNetwork(decimalAddress);
+  const oct=address=>address.split('.').map(Number);
+  const first=numberToIPv4(result.network+1);
+  const last=numberToIPv4(ipv4ToNumber(result.broadcast)-1);
+  return {ip:oct(result.inputAddress),cidr:oct(result.mask),network:oct(result.address),first:oct(first),last:oct(last),broadcast:oct(result.broadcast)};
  }
  function renderDecimal(){
   host.replaceChildren();
