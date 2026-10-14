@@ -503,8 +503,9 @@ if(host&&launch){
      }));
     }else{
      host.append(el('p','pepette-success','Bravo ! Tu as terminé les six lignes.'));
-     host.append(button('Nouvelle adresse',()=>newChallenge(true)));
-     host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+     if(completeMode&&completeLevel===2)host.append(button('Continuer vers le tableau décimal',completeMediumToDecimal));
+     else host.append(button('Nouvelle adresse',()=>newChallenge(true)));
+     if(!(completeMode&&completeLevel===2))host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
     }
     return;
    }
@@ -890,10 +891,11 @@ if(host&&launch){
  }
  function renderHostsMedium(){
   host.replaceChildren();
+  completeRestore();
   const exp=32-hostsMediumPrefix,count=2**exp-2;
   const heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Calcul du nombre d’hôtes - Je me débrouille'),
-   el('p',null,'Adresse IPv4 : 192.168.10.42/'+hostsMediumPrefix),
+   el('p',null,'Adresse IPv4 : '+(completeMode&&completeLevel===2?decimalAddress:'192.168.10.42/'+hostsMediumPrefix)),
    el('p',null,'Complète la formule du nombre d’hôtes utilisables. Tu peux corriger tes réponses.'));
   host.append(heading);
   const form=el('div','pepette-hosts-medium-form');
@@ -924,6 +926,11 @@ if(host&&launch){
     feedback.append(el('p',null,'Tu peux donc attribuer une adresse IP à '+count.toLocaleString('fr-FR')+' équipements sur ce réseau, par exemple des ordinateurs, des serveurs, des imprimantes ou du matériel réseau.'));
     for(const control of [base,exponent,last,result].filter(Boolean))control.disabled=true;
     verify.disabled=true;
+    if(completeMode&&completeLevel===2){
+     feedback.append(el('p','pepette-step-instruction','Bravo ! Tu as terminé ton exercice complet d’adressage IPv4.'));
+     feedback.append(button('Nouvel exercice complet',completeMediumStart));
+     feedback.append(button('Nouveau test',completeEnd));
+    }
    }else{
     feedback.append(el('p','pepette-hint','Ce n’est pas encore tout à fait correct. Tu peux modifier tes réponses et vérifier à nouveau.'));
     if(!correctBase||!correctExp)feedback.append(el('p',null,'Vérifie la puissance de 2 : combien de bits restent disponibles pour les hôtes ?'));
@@ -932,8 +939,10 @@ if(host&&launch){
    }
   });
   host.append(verify);
-  host.append(button('Nouvelle adresse',hostsMediumStart));
-  host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+  if(!(completeMode&&completeLevel===2)){
+   host.append(button('Nouvelle adresse',hostsMediumStart));
+   host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+  }
  }
 
 
@@ -966,6 +975,18 @@ if(host&&launch){
    decimalStep=0;decimalError='';renderDecimal();
   });
  }
+ function completeMediumStart(){
+  completeMode=true;completeLevel=2;completeSnapshots=[];
+  newChallenge(true);
+ }
+ function completeMediumToDecimal(){
+  const address=challengeAddress;
+  decimalStart(2);
+  decimalAddress=address;
+  decimalValues=Object.fromEntries(decimalRows.map(k=>[k,Array(4).fill('')]));
+  decimalStep=0;decimalLocked=false;decimalError='';decimalErrors={};
+  renderDecimal();
+ }
  function completeChallengeStart(){
   completeMode=true;completeLevel=3;completeSnapshots=[];
   newChallenge(false);
@@ -996,7 +1017,10 @@ if(host&&launch){
    finished.append(copy);
   }
   completeSnapshots=[finished];
-  if(completeLevel===3){
+  if(completeLevel===2){
+   hostsMediumPrefix=Number(decimalAddress.split('/')[1]);
+   renderHostsMedium();
+  }else if(completeLevel===3){
    hostsExpertPrefix=Number(decimalAddress.split('/')[1]);
    hostsExpertChecked=false;hostsExpertValues=null;
    renderHostsExpert();
@@ -1010,5 +1034,5 @@ if(host&&launch){
   host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});
  }
 
- launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);else if(topic==='decimal'&&['1','2','3'].includes(level))decimalStart(Number(level));else if(topic==='hotes'&&level==='1')hostsStart();else if(topic==='hotes'&&level==='2')hostsMediumStart();else if(topic==='hotes'&&level==='3')hostsExpertStart();else if(topic==='complet'&&level==='1')completeStart();else if(topic==='complet'&&level==='3')completeChallengeStart();});
+ launch.addEventListener('click',()=>{const topic=document.querySelector('[data-training-topic][aria-pressed="true"]')?.dataset.trainingTopic;const level=document.querySelector('[data-training-difficulty][aria-pressed="true"]')?.dataset.trainingDifficulty;if(topic==='binaire'&&level==='1')start();else if(topic==='binaire'&&level==='2')newChallenge(true);else if(topic==='binaire'&&level==='3')newChallenge(false);else if(topic==='decimal'&&['1','2','3'].includes(level))decimalStart(Number(level));else if(topic==='hotes'&&level==='1')hostsStart();else if(topic==='hotes'&&level==='2')hostsMediumStart();else if(topic==='hotes'&&level==='3')hostsExpertStart();else if(topic==='complet'&&level==='1')completeStart();else if(topic==='complet'&&level==='2')completeMediumStart();else if(topic==='complet'&&level==='3')completeChallengeStart();});
 }
