@@ -703,8 +703,8 @@ if(host&&launch){
   completeRestore();
   const exponent=32-hostsPrefix,power=2**exponent,result=power-2;
   const header=el('div','pepette-exercise-header'),heading=el('div','pepette-exercise-heading');
-  heading.append(el('h3',null,'Calcul du nombre d’hôtes - Avec Pépette'),el('p',null,'Adresse IPv4 : 192.168.10.42/'+hostsPrefix));
-  heading.append(el('p','pepette-step-instruction',hostsStep===4?'Bravo ! Ton calcul est terminé.':'Complète la case dans l’égalité, puis vérifie ta réponse.'));
+  heading.append(el('h3',null,'Calcul du nombre d’hôtes - Avec Pépette'),el('p',null,'Adresse IPv4 : '+(completeMode?decimalAddress:'192.168.10.42/'+hostsPrefix)));
+  heading.append(el('p','pepette-step-instruction',hostsStep===4?(completeMode?'Bravo ! Tu as terminé ton exercice complet d’adressage IPv4.':'Bravo ! Ton calcul est terminé.'):'Complète la case dans l’égalité, puis vérifie ta réponse.'));
   header.append(heading);host.append(header);
   const layout=el('div','pepette-hosts-layout');layout.style.cssText='display:flex;align-items:flex-start;flex-wrap:wrap;gap:24px;margin-top:12px';host.append(layout);
   const work=el('div','pepette-hosts-work');work.style.cssText='flex:1 1 380px;min-width:0';layout.append(work);
@@ -946,11 +946,25 @@ if(host&&launch){
   });
  }
  function completeToHosts(){
-  completeSaveAndContinue(()=>{
-   hostsStart();
-   hostsPrefix=Number(examples[example].split('/')[1]);
-   hostsStep=0;hostsError='';renderHosts();
-  });
+  // Reutiliser le rendu decimal valide : son tableau binaire de reference
+  // et son tableau decimal restent visibles sans reconstruire ces composants.
+  const finished=el('section','pepette-complete-finished');
+  finished.style.marginBottom='28px';
+  for(const child of Array.from(host.children)){
+   const copy=child.cloneNode(true);
+   copy.querySelectorAll('button').forEach(button=>button.remove());
+   copy.querySelectorAll('input').forEach(input=>{
+    input.disabled=true;
+    input.style.background='#e9edf3';
+    input.style.color='#68778b';
+    input.style.borderColor='#cbd5e1';
+   });
+   finished.append(copy);
+  }
+  completeSnapshots=[finished];
+  hostsPrefix=Number(decimalAddress.split('/')[1]);
+  hostsStep=0;hostsError='';
+  renderHosts();
  }
  function completeEnd(){
   completeMode=false;completeSnapshots=[];
