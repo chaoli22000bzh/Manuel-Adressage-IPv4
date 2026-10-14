@@ -5,7 +5,7 @@ if(ficheChapter)ficheChapter.addEventListener('toggle',()=>{
  if(ficheChapter.open)ficheChapter.scrollIntoView({behavior:'smooth',block:'start'});
 });
 // V0.3.105 - résultats du cours issus du moteur IPv4 commun.
-import { parseNetwork, ipv4ToNumber, numberToIPv4, binaryOctets, planSubnets, subnetAt } from './ipv4-engine.js';
+import { parseNetwork, ipv4ToNumber, numberToIPv4, binaryOctets } from './ipv4-engine.js';
 const example = parseNetwork('192.168.10.75/26');
 const prefix = example.prefix;
 const bits32 = address => binaryOctets(address).join('');
@@ -13,20 +13,16 @@ const firstUsable = numberToIPv4(example.network + 1);
 const lastUsable = numberToIPv4(ipv4ToNumber(example.broadcast) - 1);
 const rows=[['Adresse d’hôte',bits32(example.inputAddress)],['CIDR',bits32(example.mask)],['Adresse du réseau',bits32(example.address)],['1re IP adressable',bits32(firstUsable)],['Dernière IP adressable',bits32(lastUsable)],['Adresse de broadcast',bits32(example.broadcast)]];
 function renderTable(target,mode){const table=document.createElement('table');table.className='bit-table'+(mode==='ip-only'||mode==='host'?' bit-table-lesson':'');table.setAttribute('aria-label','Tableau d’adressage IPv4 sur 32 bits');let html='<thead><tr><th></th>';for(let o=0;o<4;o++)html+='<th class="octet octet-'+(o+1)+'" colspan="8">'+(o+1)+(o===0?'er':'e')+' octet</th>';html+='</tr><tr><th>Poids des bits</th>';for(let i=0;i<32;i++)html+='<th class="weight '+(mode!=='ip-only'&&i===prefix-1?'split':'')+'">'+(128>>(i%8))+'</th>';html+='</tr></thead><tbody>';const lessonIndex=mode.startsWith('line-')?Number(mode.slice(5)):-1;const max=lessonIndex>=0?lessonIndex+3:mode==='ip-only'?1:mode==='host'?2:6;const progress=mode==='steps'?step:6;for(let r=0;r<max;r++){const [name,value]=rows[r];html+='<tr class="'+(r===0?'host-row':'')+'"><td class="'+((mode==='ip-only'&&r===0||mode==='host'&&r===1||lessonIndex>=0&&r===lessonIndex+2)?'active-row-label':'')+'">'+name+'</td>';for(let i=0;i<32;i++){let show=mode==='ip-only'&&revealIp||mode==='full'||mode==='host'&&(r===0||r===1&&revealHost)||lessonIndex>=0&&(r<lessonIndex+2||r===lessonIndex+2&&revealLines[lessonIndex])||mode==='steps'&&(r<2||r===2&&progress>=1||r===3&&progress>=2||r===4&&progress>=3||r===5&&progress>=4);let one=show&&value[i]==='1';let region=r===0?'original-ip':mode==='ip-only'||mode==='host'&&!revealHost&&r===1?'neutral':i<prefix?'network':'hostpart';let split=mode!=='ip-only'&&i===prefix-1&&r!==0&&!(mode==='host'&&!revealHost)?'split':'';html+='<td class="'+(one?'one ':'')+region+' '+split+'">'+(one?'1':'')+'</td>';}html+='</tr>';}html+='</tbody>';table.innerHTML=html;const container=document.getElementById(target);container.replaceChildren(table);if(mode==='host'&&revealHost){const annotation=document.createElement('div');annotation.className='network-host-annotation';annotation.setAttribute('aria-label','Repère pédagogique : '+prefix+' bits réseau et '+(32-prefix)+' bits hôtes');annotation.innerHTML='<div class="annotation-spacer"></div><div class="annotation-track"><div class="annotation-network" style="flex:'+prefix+'">⟵ Partie réseau · '+prefix+' bits ⟶</div><div class="annotation-host" style="flex:'+(32-prefix)+'">Hôte · '+(32-prefix)+' bits</div></div>';container.appendChild(annotation);const cells=table.querySelectorAll('tbody tr:first-child td');const first=cells[1],boundary=cells[prefix+1],last=cells[32];const left=first.offsetLeft,right=last.offsetLeft+last.offsetWidth,split=boundary.offsetLeft;annotation.style.width=table.offsetWidth+'px';const spacer=annotation.querySelector('.annotation-spacer'),track=annotation.querySelector('.annotation-track');spacer.style.flex='0 0 '+left+'px';track.style.flex='0 0 '+(right-left)+'px';track.querySelector('.annotation-network').style.flex='0 0 '+(split-left)+'px';track.querySelector('.annotation-host').style.flex='0 0 '+(right-split)+'px'}}
-let revealIp=false,revealHost=false,revealLines=[false,false,false,false],step=0,flsmShown=0;
-const flsmPlan=planSubnets(parseNetwork('192.168.10.0/24'),{method:'count',count:4});
-// V0.3.109 - le découpage FLSM provient du moteur IPv4 commun.
-function updateFlsm(){const body=document.getElementById('flsm-rows');if(!body)return;body.innerHTML='';for(let n=0;n<flsmPlan.concernedCount;n++){const subnet=subnetAt(flsmPlan,n);const networkLast=Number(subnet.address.split('.')[3]);const broadcastLast=Number(subnet.broadcast.split('.')[3]);const tr=document.createElement('tr');tr.innerHTML=`<td><b>${n}</b></td><td><code>${n.toString(2).padStart(2,'0')}</code></td><td><code>${networkLast.toString(2).padStart(8,'0')}</code></td><td><code>${broadcastLast.toString(2).padStart(8,'0')}</code></td><td>${subnet.address}</td><td>${subnet.broadcast}</td>`;if(n>=flsmShown){tr.querySelectorAll('td').forEach((cell,i)=>{if(i>0)cell.textContent='—'})}body.appendChild(tr)}document.getElementById('flsm-next').disabled=flsmShown===flsmPlan.concernedCount;document.getElementById('flsm-next').textContent=flsmShown===flsmPlan.concernedCount?'Les 4 sous-réseaux sont visibles ✓':'Révéler un sous-réseau →'}
+let revealIp=false,revealHost=false,revealLines=[false,false,false,false],step=0;
 const eyeOpen='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';const eyeClosed='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.6 5.1A11 11 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3 3.7"/><path d="M6.3 6.3C3.5 8.1 2 12 2 12s3.5 7 10 7a10.5 10.5 0 0 0 4.2-.9"/><path d="M3 3l18 18"/><path d="M10 10a3 3 0 0 0 4 4"/></svg>';document.querySelectorAll('.bit-toggle-icon').forEach(el=>el.innerHTML=eyeOpen);
 function syncToggle(type,shown,what){const b=document.querySelector('[data-reveal="'+type+'"]');b.setAttribute('aria-pressed',String(shown));b.setAttribute('aria-label',(shown?'Masquer':'Afficher')+' les 1 '+what);b.querySelector('.bit-toggle-label').textContent=shown?'Masquer':'Afficher';b.querySelector('.bit-toggle-icon').innerHTML=shown?eyeClosed:eyeOpen}
 document.querySelector('[data-reveal="ip"]').addEventListener('click',()=>{revealIp=!revealIp;renderTable('table-ip-only','ip-only');renderTable('table-host','host');syncToggle('ip',revealIp,'de l’adresse IPv4')});document.querySelector('[data-reveal="host"]').addEventListener('click',()=>{revealHost=!revealHost;renderTable('table-host','host');syncToggle('host',revealHost,'du CIDR')});for(let k=0;k<4;k++){const btn=document.querySelector('[data-reveal="line-'+k+'"]');btn.querySelector('.bit-toggle-icon').innerHTML=eyeOpen;btn.addEventListener('click',()=>{revealLines[k]=!revealLines[k];renderTable('table-line-'+k,'line-'+k);syncToggle('line-'+k,revealLines[k],'de cette adresse')})}
 // Les étapes décimales G à K possèdent leurs propres boutons.
-document.getElementById('flsm-next')?.addEventListener('click',()=>{flsmShown=Math.min(4,flsmShown+1);updateFlsm()});document.getElementById('flsm-reset')?.addEventListener('click',()=>{flsmShown=0;updateFlsm()});
 const themeButton=document.getElementById('theme');try{if(localStorage.getItem('ipv4-theme')==='dark')document.body.classList.add('dark')}catch{}themeButton.addEventListener('click',()=>{document.body.classList.toggle('dark');try{localStorage.setItem('ipv4-theme',document.body.classList.contains('dark')?'dark':'light')}catch{}});
 const links=[...document.querySelectorAll('nav a')];links.forEach(a=>a.addEventListener('click',()=>{const target=document.querySelector(a.getAttribute('href'));if(target?.matches('details'))target.open=true;}));
 document.querySelectorAll('.chapter').forEach(chapter=>chapter.addEventListener('toggle',()=>{if(chapter.open)document.querySelectorAll('.chapter').forEach(other=>{if(other!==chapter)other.open=false})}));
 document.querySelectorAll('.subfold').forEach(fold=>fold.addEventListener('toggle',()=>{if(fold.open)fold.closest('.chapter').querySelectorAll('.subfold').forEach(other=>{if(other!==fold)other.open=false})}));
-renderTable('table-ip-only','ip-only');renderTable('table-host','host');for(let k=0;k<4;k++)renderTable('table-line-'+k,'line-'+k);renderTable('table-full','full');updateFlsm();
+renderTable('table-ip-only','ip-only');renderTable('table-host','host');for(let k=0;k<4;k++)renderTable('table-line-'+k,'line-'+k);renderTable('table-full','full');
 
 // Tableau de conversion décimal/binaire, construit localement sans connexion Internet.
 const binaryReference=document.getElementById('binary-reference-rows');if(binaryReference){binaryReference.innerHTML=Array.from({length:64},(_,i)=>'<tr>'+[0,64,128,192].map(base=>'<td>'+(base+i)+'</td><td>'+(base+i).toString(2).padStart(8,'0')+'</td>').join('')+'</tr>').join('');}
@@ -65,20 +61,15 @@ const goDecimal=document.getElementById('go-decimal');if(goDecimal)goDecimal.add
 
 // V0.3.33 - navigation vers l'entraînement commun et les sous-réseaux.
 const goTraining=document.getElementById('go-training');
-const goFlsm=document.getElementById('go-flsm');
 function openNextChapter(targetId){
  const target=document.getElementById(targetId);
  const ipv4=document.getElementById('fiche');
  if(!target)return;
  if(ipv4)ipv4.open=(targetId==='training-fold');
- if(targetId==='flsm'){
-   const flsm=document.getElementById('flsm');
-   if(flsm)flsm.open=true;
- }else target.open=true;
- target.scrollIntoView({behavior:'smooth',block:'start'});
+ target.open=true;
+  target.scrollIntoView({behavior:'smooth',block:'start'});
 }
 if(goTraining)goTraining.addEventListener('click',()=>openNextChapter('training-fold'));
-if(goFlsm)goFlsm.addEventListener('click',()=>openNextChapter('flsm'));
 
 // V0.3.39 - aucun choix initial, lancement disponible après deux sélections.
 const trainingTopics=[...document.querySelectorAll('[data-training-topic]')];
