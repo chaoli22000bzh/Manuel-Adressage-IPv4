@@ -623,7 +623,11 @@ if(host&&launch){
   }
   // Toujours afficher le tableau binaire de référence, y compris dans l'exercice complet.
   // L'ancien tableau interactif n'est plus conservé lors du changement d'étape.
-  reference.style.marginBottom='38px';host.append(reference);
+  reference.style.marginBottom='38px';
+  reference.style.opacity='0.48';
+  reference.style.filter='grayscale(1)';
+  reference.setAttribute('aria-label','Tableau binaire de référence non modifiable');
+  host.append(reference);
   const title=el('h4',null,'Tableau en décimal');title.style.margin='0 0 2px';host.append(title);
   const table=el('div','pepette-decimal-table');
   table.style.cssText='display:grid;grid-template-columns:minmax(90px,1.5fr) repeat(4,minmax(52px,1fr))'+(decimalLevel===2?' minmax(125px,auto)':'')+';column-gap:6px;row-gap:6px;align-items:center;max-width:'+(decimalLevel===2?'980px':'780px');
