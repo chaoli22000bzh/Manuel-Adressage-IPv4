@@ -621,9 +621,9 @@ if(host&&launch){
    }
    reference.append(part);
   }
-  // Le tableau binaire validé reste visible au-dessus dans l'exercice complet.
-  // Ne pas répéter le tableau de référence à l'étape décimale.
-  if(!completeMode){reference.style.marginBottom='24px';host.append(reference);}
+  // Toujours afficher le tableau binaire de référence, y compris dans l'exercice complet.
+  // L'ancien tableau interactif n'est plus conservé lors du changement d'étape.
+  reference.style.marginBottom='24px';host.append(reference);
   const title=el('h4',null,'Tableau en décimal');title.style.margin='0 0 4px';host.append(title);
   const table=el('div','pepette-decimal-table');
   table.style.cssText='display:grid;grid-template-columns:minmax(90px,1.5fr) repeat(4,minmax(52px,1fr))'+(decimalLevel===2?' minmax(125px,auto)':'')+';column-gap:6px;row-gap:6px;align-items:center;max-width:'+(decimalLevel===2?'980px':'780px');
