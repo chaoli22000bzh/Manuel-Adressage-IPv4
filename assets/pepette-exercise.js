@@ -623,9 +623,9 @@ if(host&&launch){
   }
   // Toujours afficher le tableau binaire de référence, y compris dans l'exercice complet.
   // L'ancien tableau interactif n'est plus conservé lors du changement d'étape.
-  reference.style.marginBottom='38px';
+  reference.style.marginBottom='24px';
   host.append(reference);
-  const title=el('h4',null,'Tableau en décimal');title.style.margin='0 0 2px';host.append(title);
+  const title=el('h4',null,'Tableau en décimal');title.style.margin='0 0 4px';host.append(title);
   const table=el('div','pepette-decimal-table');
   table.style.cssText='display:grid;grid-template-columns:minmax(90px,1.5fr) repeat(4,minmax(52px,1fr))'+(decimalLevel===2?' minmax(125px,auto)':'')+';column-gap:6px;row-gap:6px;align-items:center;max-width:'+(decimalLevel===2?'980px':'780px');
   table.append(el('strong',null,''));
@@ -640,7 +640,7 @@ if(host&&launch){
     const input=el('input');
     input.type='text';input.inputMode='numeric';input.maxLength=3;input.autocomplete='off';
     input.value=decimalValues[kind][o];input.disabled=!editable;
-    input.style.cssText='width:100%;min-width:0;box-sizing:border-box;padding:9px 4px;text-align:center;border:2px solid '+(editable?'#f59e0b':'#cbd5e1')+';border-radius:6px;font-size:16px;background:'+(editable?'#fff':'#e9edf3')+';color:#243247';
+    input.style.cssText='width:100%;min-width:0;box-sizing:border-box;padding:9px 4px;text-align:center;border:2px solid '+(editable?'#f59e0b':'#cbd5e1')+';border-radius:6px;font-size:16px';
     if(decimalLocked&&decimalValues[kind][o]!==String(expected[kind][o])){input.style.borderColor='#dc2626';input.style.background='#fee2e2';}
     input.setAttribute('aria-label',decimalLabels[kind]+', octet '+(o+1));
     input.addEventListener('input',()=>{
