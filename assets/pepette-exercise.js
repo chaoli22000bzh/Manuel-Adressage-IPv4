@@ -1,6 +1,14 @@
 // Prototype pedagogique Pépette : premiere ligne binaire, octet par octet.
 // Moteur IPCalc importe localement, aucun acces reseau.
-import { binaryOctets } from './ipv4-engine.js';
+import { binaryOctets, parseNetwork, numberToIPv4, ipv4ToNumber, usableHosts } from './ipv4-engine.js';
+// V0.3.106 - les réponses réseau des exercices binaires proviennent d'IPcalc.
+const binaryAddress = address => binaryOctets(address).join('').split('').map(bit => bit === '1');
+const binaryExerciseAnswers = address => {
+ const result = parseNetwork(address);
+ const first = numberToIPv4(result.network + 1);
+ const last = numberToIPv4(ipv4ToNumber(result.broadcast) - 1);
+ return {ip:binaryAddress(result.inputAddress),cidr:binaryAddress(result.mask),network:binaryAddress(result.address),first:binaryAddress(first),last:binaryAddress(last),broadcast:binaryAddress(result.broadcast)};
+};
 const host=document.getElementById('pepette-exercise');
 const launch=document.getElementById('launch-training');
 if(host&&launch){
@@ -14,11 +22,8 @@ if(host&&launch){
   host.replaceChildren();
   completeRestore();
   const [ip,cidr]=examples[example].split('/'),octets=ip.split('.').map(Number),expected=binaryOctets(ip);
-  const mask=(0xffffffff<<(32-Number(cidr)))>>>0;
-  const ipNumber=octets.reduce((n,v)=>((n*256)+v)>>>0,0);
-  const networkNumber=(ipNumber&mask)>>>0,broadcastNumber=(networkNumber|(~mask))>>>0;
-  const toOctets=n=>[24,16,8,0].map(shift=>(n>>>shift)&255);
-  const targets={first:toOctets((networkNumber+1)>>>0),last:toOctets((broadcastNumber-1)>>>0),broadcast:toOctets(broadcastNumber)};
+  const answers=binaryExerciseAnswers(examples[example]);
+  const targets=Object.fromEntries(['first','last','broadcast'].map(kind=>[kind,Array.from({length:4},(_,octet)=>parseInt(answers[kind].slice(octet*8,octet*8+8).map(bit=>bit?'1':'0').join(''),2))]));
   const kinds=['first','last','broadcast'],labels={first:'1re IP',last:'Dernière IP',broadcast:'Broadcast'};
   const header=el('div','pepette-exercise-header');
   const heading=el('div','pepette-exercise-heading');
@@ -376,12 +381,7 @@ if(host&&launch){
   host.scrollIntoView({behavior:'smooth',block:'start'});
  }
  function challengeExpected(){
-  const [ip,p]=challengeAddress.split('/'),prefix=Number(p),octs=ip.split('.').map(Number);
-  const address=octs.reduce((n,v)=>((n*256)+v)>>>0,0);
-  const mask=(0xffffffff<<(32-prefix))>>>0;
-  const network=(address&mask)>>>0,broadcast=(network|(~mask))>>>0;
-  const bits=n=>Array.from({length:32},(_,i)=>Boolean((n>>>(31-i))&1));
-  return {ip:bits(address),cidr:bits(mask),network:bits(network),first:bits((network+1)>>>0),last:bits((broadcast-1)>>>0),broadcast:bits(broadcast)};
+  return binaryExerciseAnswers(challengeAddress);
  }
  function renderChallenge(){
   host.replaceChildren();
@@ -583,12 +583,13 @@ if(host&&launch){
   stage='decimal';host.hidden=false;renderDecimal();
   host.scrollIntoView({behavior:'smooth',block:'start'});
  }
+ // V0.3.107 - les valeurs décimales proviennent du moteur IPv4 commun.
  function decimalExpected(){
-  const [ip,p]=decimalAddress.split('/'),prefix=Number(p),octs=ip.split('.').map(Number);
-  const address=octs.reduce((n,v)=>((n*256)+v)>>>0,0);
-  const mask=(0xffffffff<<(32-prefix))>>>0,network=(address&mask)>>>0,broadcast=(network|(~mask))>>>0;
-  const oct=n=>[24,16,8,0].map(shift=>(n>>>shift)&255);
-  return {ip:oct(address),cidr:oct(mask),network:oct(network),first:oct((network+1)>>>0),last:oct((broadcast-1)>>>0),broadcast:oct(broadcast)};
+  const result=parseNetwork(decimalAddress);
+  const oct=address=>address.split('.').map(Number);
+  const first=numberToIPv4(result.network+1);
+  const last=numberToIPv4(ipv4ToNumber(result.broadcast)-1);
+  return {ip:oct(result.inputAddress),cidr:oct(result.mask),network:oct(result.address),first:oct(first),last:oct(last),broadcast:oct(result.broadcast)};
  }
  function renderDecimal(){
   host.replaceChildren();
@@ -721,7 +722,7 @@ if(host&&launch){
  function renderHosts(){
   host.replaceChildren();
   completeRestore();
-  const exponent=32-hostsPrefix,power=2**exponent,result=power-2;
+  const exponent=32-hostsPrefix,power=2**exponent,result=usableHosts(hostsPrefix);
   const header=el('div','pepette-exercise-header'),heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Calcul du nombre d’hôtes - Avec Pépette'),el('p',null,'Adresse IPv4 : '+(completeMode?decimalAddress:'192.168.10.42/'+hostsPrefix)));
   if(!completeMode||hostsStep!==4)heading.append(el('p','pepette-step-instruction',hostsStep===4?'Bravo ! Ton calcul est terminé.':'Complète la case dans l’égalité, puis vérifie ta réponse.'));
@@ -848,7 +849,7 @@ if(host&&launch){
    for(const control of [base,exponent,last,numericResult].filter(Boolean))control.disabled=true;
    const correctBase=base.value.trim()==='2',correctExp=exponent.value.trim()===String(expectedExponent);
    const correctLast=last.value.trim().replace(/\s+/g,'').replace('−','-')==='-2';
-   const expectedCount=2**expectedExponent-2;
+   const expectedCount=usableHosts(hostsExpertPrefix);
    const correctResult=!needsResult||numericResult.value.trim().replace(/[\s\u00a0\u202f]/g,'')===String(expectedCount);
    const correct=correctBase&&correctExp&&correctLast&&correctResult;
    const msg=el('div','pepette-hosts-expert-feedback');
@@ -876,7 +877,7 @@ if(host&&launch){
   if(hostsExpertChecked){
    if(completeMode&&completeLevel===3){
     const v=hostsExpertValues;
-    const correct=v.base.trim()==='2'&&v.exponent.trim()===String(32-hostsExpertPrefix)&&v.last.trim().replace(/\s+/g,'').replace('−','-')==='-2'&&((32-hostsExpertPrefix)>8||v.result.trim().replace(/[\s\u00a0\u202f]/g,'')===String(2**(32-hostsExpertPrefix)-2));
+    const correct=v.base.trim()==='2'&&v.exponent.trim()===String(32-hostsExpertPrefix)&&v.last.trim().replace(/\s+/g,'').replace('−','-')==='-2'&&((32-hostsExpertPrefix)>8||v.result.trim().replace(/[\s\u00a0\u202f]/g,'')===String(usableHosts(hostsExpertPrefix)));
     if(correct){
      host.append(el('p','pepette-step-instruction','Bravo ! Tu as terminé ton exercice complet d’adressage IPv4.'));
      host.append(button('Nouvel exercice complet',completeChallengeStart));
@@ -902,7 +903,7 @@ if(host&&launch){
  function renderHostsMedium(){
   host.replaceChildren();
   completeRestore();
-  const exp=32-hostsMediumPrefix,count=2**exp-2;
+  const exp=32-hostsMediumPrefix,count=usableHosts(hostsMediumPrefix);
   const heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Calcul du nombre d’hôtes - Je me débrouille'),
    el('p',null,'Adresse IPv4 : '+(completeMode&&completeLevel===2?decimalAddress:'192.168.10.42/'+hostsMediumPrefix)),
