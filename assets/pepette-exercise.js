@@ -431,6 +431,16 @@ if(host&&launch){
    table.append(part);
   }
   host.append(table);
+  // Fin du niveau intermediaire : navigation avant le retour anticipe.
+  if(intermediate&&intermediateStep>=6){
+   host.append(el('p','pepette-success','Bravo ! Tu as terminé les six lignes.'));
+   if(completeMode&&completeLevel===2)host.append(button('Continuer vers le tableau décimal',completeMediumToDecimal));
+   else{
+    host.append(button('Nouvelle adresse',()=>newChallenge(true)));
+    host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
+   }
+  }
+  if(intermediate&&intermediateStep>=6)return;
   if(!challengeLocked&&(!intermediate||intermediateStep<6)){
    // Peinture au passage : horizontal entre octets et vertical entre lignes.
    let drag=null;
@@ -537,15 +547,6 @@ if(host&&launch){
     else host.append(button('Corriger mon tableau',()=>{challengeLocked=false;challengeResult=null;renderChallenge();}));
    }else{
     host.append(button('Nouvelle adresse',newChallenge));
-    host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
-   }
-  }
-  // La derniere ligne validee ne doit pas masquer la navigation.
-  if(intermediate&&intermediateStep>=6){
-   host.append(el('p','pepette-success','Bravo ! Tu as terminé les six lignes.'));
-   if(completeMode&&completeLevel===2)host.append(button('Continuer vers le tableau décimal',completeMediumToDecimal));
-   else{
-    host.append(button('Nouvelle adresse',()=>newChallenge(true)));
     host.append(button('Nouveau test',()=>{host.hidden=true;document.querySelector('.training-setup')?.scrollIntoView({behavior:'smooth'});}));
    }
   }
