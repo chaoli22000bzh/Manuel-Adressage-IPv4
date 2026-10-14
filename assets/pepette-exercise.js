@@ -924,28 +924,9 @@ if(host&&launch){
   host.prepend(fragment);
  }
  function completeSaveAndContinue(next){
-  const snapshot=el('section','pepette-complete-finished');
-  snapshot.style.cssText='margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #cbd5e1';
-  for(const child of Array.from(host.children).slice(completeSnapshots.length)){
-   const copy=child.cloneNode(true);
-   // Les boutons de bits FONT partie du tableau : ne jamais les supprimer.
-   // Seuls les boutons d'action/navigation disparaissent.
-   copy.querySelectorAll('button').forEach(control=>{
-    if(control.classList.contains('pepette-bit')||control.classList.contains('pepette-cidr-bit')){
-     control.disabled=true;control.tabIndex=-1;
-     control.style.pointerEvents='none';
-    }else control.remove();
-   });
-   copy.querySelectorAll('input,select').forEach(control=>{
-    const value=el('span',null,control.value||'');
-    value.style.cssText=control.getAttribute('style')||'';
-    value.style.display='inline-flex';value.style.alignItems='center';value.style.justifyContent='center';
-    value.style.background='#f8fafc';value.style.minHeight='34px';
-    control.replaceWith(value);
-   });
-   snapshot.append(copy);
-  }
-  completeSnapshots.push(snapshot);
+  // Chaque etape remplace la precedente : le tableau binaire de reference
+  // est deja affiche par l'exercice decimal, sans dupliquer l'ancien tableau.
+  completeSnapshots=[];
   next();
  }
  function completeStart(){
