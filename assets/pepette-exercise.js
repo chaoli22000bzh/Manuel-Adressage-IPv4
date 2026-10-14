@@ -585,7 +585,7 @@ if(host&&launch){
   instruction.append(el('strong',null,complete?'Tableau terminé !':decimalLevel===1?'Complète '+decimalLabels[activeRow]+' : octet '+(activeOctet+1)+'.':decimalLevel===2?'Complète la ligne '+decimalLabels[decimalRows[decimalStep]]+'.':'Complète les six lignes du tableau.'));
   instruction.append(el('p',null,'Observe le tableau binaire fourni, puis écris les valeurs décimales (0 à 255).'));
   heading.append(instruction);header.append(heading);host.append(header);
-  const reference=el('div','pepette-octets pepette-unified-grid pepette-challenge-grid');
+  const reference=el('div','pepette-octets pepette-unified-grid pepette-challenge-grid pepette-decimal-reference');
   for(let o=0;o<4;o++){
    const part=el('section','pepette-octet pepette-unified-octet');
    part.append(el('strong',null,'Octet '+(o+1)));
