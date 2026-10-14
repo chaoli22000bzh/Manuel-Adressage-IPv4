@@ -4,7 +4,7 @@ import { binaryOctets } from './ipv4-engine.js';
 const host=document.getElementById('pepette-exercise');
 const launch=document.getElementById('launch-training');
 if(host&&launch){
- const examples=['10.11.12.13/8','172.16.1.1/16','192.168.1.1/24','10.1.2.3/8','172.16.2.1/16','192.168.0.1/24'];
+ const examples=['10.11.12.13/8','172.16.1.1/16','192.168.1.20/24','10.1.2.3/8','172.16.2.1/16','192.168.0.15/24'];
  const weights=[128,64,32,16,8,4,2,1];
  let example=0,octet=0,bits=Array.from({length:4},()=>Array(8).fill(false)),hint=0,stage='ip',cidrBits=Array(32).fill(false),barPosition=null,barHint=0,barFeedback='',networkBits=Array.from({length:4},()=>Array(8).fill(false)),networkOctet=0,networkHint=0,extraBits={},extraOctet=0,extraHint=0,reviewShown=[false,false],showCourseHelp=false;
  const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
@@ -704,7 +704,7 @@ if(host&&launch){
   const exponent=32-hostsPrefix,power=2**exponent,result=power-2;
   const header=el('div','pepette-exercise-header'),heading=el('div','pepette-exercise-heading');
   heading.append(el('h3',null,'Calcul du nombre d’hôtes - Avec Pépette'),el('p',null,'Adresse IPv4 : '+(completeMode?decimalAddress:'192.168.10.42/'+hostsPrefix)));
-  heading.append(el('p','pepette-step-instruction',hostsStep===4?(completeMode?'Bravo ! Tu as terminé ton exercice complet d’adressage IPv4.':'Bravo ! Ton calcul est terminé.'):'Complète la case dans l’égalité, puis vérifie ta réponse.'));
+  if(!completeMode||hostsStep!==4)heading.append(el('p','pepette-step-instruction',hostsStep===4?'Bravo ! Ton calcul est terminé.':'Complète la case dans l’égalité, puis vérifie ta réponse.'));
   header.append(heading);host.append(header);
   const layout=el('div','pepette-hosts-layout');layout.style.cssText='display:flex;align-items:flex-start;flex-wrap:wrap;gap:24px;margin-top:12px';host.append(layout);
   const work=el('div','pepette-hosts-work');work.style.cssText='flex:1 1 380px;min-width:0';layout.append(work);
@@ -756,6 +756,7 @@ if(host&&launch){
    work.append(el('p','pepette-success','Bravo ! Tu as trouvé '+result+' hôtes utilisables.'));
    work.append(el('p',null,'Tu peux donc attribuer une adresse IP à '+result+' équipements sur ce réseau, par exemple des ordinateurs, des serveurs, des imprimantes ou du matériel réseau.'));
    if(completeMode){
+    work.append(el('p','pepette-step-instruction','Bravo ! Tu as terminé ton exercice complet d’adressage IPv4.'));
     work.append(button('Nouvel exercice complet',completeStart));
     work.append(button('Nouveau test',completeEnd));
    }else{
