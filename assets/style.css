@@ -291,3 +291,10 @@ aside.pepette-tip{position:static!important;top:auto!important;height:auto!impor
 .pepette-review-check input{width:18px;height:18px;accent-color:#2563eb}
 .pepette-action:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:650px){.pepette-review-tip{padding-left:12px;padding-top:76px}.pepette-review-photo{top:10px}}
+
+/* V0.3.90 - Tableau binaire de reference du decimal : textes attenues mais lisibles. */
+.pepette-decimal-reference .pepette-octet > strong,
+.pepette-decimal-reference .pepette-power,
+.pepette-decimal-reference .pepette-weight,
+.pepette-decimal-reference .pepette-line-label{color:#7b8798!important}
+.pepette-decimal-reference .pepette-bit{color:#68778b!important}
